@@ -1,0 +1,22 @@
+{
+  "name": "return-them-home",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A cinematic CesiumJS experience: the real British Museum at Bloomsbury, then 5,000 object photographs streaming home along arcs to 88 nations.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0",
+    "vite": "^8.0.12",
+    "vite-plugin-cesium": "^1.2.23"
+  },
+  "dependencies": {
+    "cesium": "^1.142.0"
+  }
+}
