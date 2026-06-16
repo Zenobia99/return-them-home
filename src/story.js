@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import { flyToEntrance } from './museum.js';
+import { flyToHeroView, flyToEntrance } from './museum.js';
 
 // Length of a full run (pile -> home, or home -> pile), in seconds.
 const RUN_SECS = 16;
@@ -54,23 +54,27 @@ export class Story {
     this._raf = requestAnimationFrame(tick);
   }
 
-  // Pile -> origins. When everything has arrived, descend to a street-level
-  // view of the now-empty museum entrance as the closing shot.
+  // Pile -> origins. Ends on the pulled-back global view so the viewer can
+  // explore the dispersed discs and open their detail cards. (No descent here
+  // — the street-level entrance is the closing beat of the gather pass.)
   returnHome() {
     this.phase = 'returning';
     this.flyGlobal();
     this._run(0.0, () => {
       this.phase = 'home';
-      setTimeout(() => flyToEntrance(this.viewer), 700);
     });
   }
 
-  // Origins -> pile.
+  // Origins -> pile (fly back to the museum). When everything is back in the
+  // pile, fly the camera home to the British Museum and then descend to a
+  // street-level view of the entrance — the closing shot.
   gather() {
     this.phase = 'gathering';
     this.flyGlobal();
     this._run(1.0, () => {
       this.phase = 'museum';
+      flyToHeroView(this.viewer, /* animate */ true); // fly back to the museum
+      setTimeout(() => flyToEntrance(this.viewer), 3200); // then to the entrance
     });
   }
 
