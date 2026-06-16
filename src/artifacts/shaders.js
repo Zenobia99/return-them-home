@@ -1,6 +1,8 @@
-// GLSL for the photo-disc primitive. Written in GLSL ES 1.00 style
-// (attribute / varying / gl_FragColor); Cesium modernises it for WebGL2 and
-// wires up the czm_* automatic uniforms it detects.
+// GLSL for the photo-disc primitive. Cesium 1.142 is WebGL2-only and compiles
+// shaders as GLSL ES 3.00, so these use `in`/`out`, `texture()`, and Cesium's
+// auto-declared `out_FragColor` (NOT attribute/varying/gl_FragColor/texture2D).
+// Cesium prepends the #version directive and wires up the czm_* automatic
+// uniforms it detects.
 //
 // Each disc is a camera-facing quad sized in screen pixels. The vertex shader
 // flies each disc from its museum pile slot to its home origin along a
@@ -13,22 +15,22 @@
 //   t = clamp(u_prog*(1+S) - aOrd*S, 0, 1)   is this disc's own 0->1 flight.
 
 export const DISC_VERTEX = /* glsl */ `
-attribute vec3 aHome;     // ECEF position at the origin country
-attribute vec3 aMuseum;   // ECEF position in the Bloomsbury pile
-attribute float aOrd;     // flight order in [0,1]
-attribute vec2 aCorner;   // quad corner in [-1, 1]
-attribute vec2 aUv;       // atlas UV at this corner
+in vec3 aHome;     // ECEF position at the origin country
+in vec3 aMuseum;   // ECEF position in the Bloomsbury pile
+in float aOrd;     // flight order in [0,1]
+in vec2 aCorner;   // quad corner in [-1, 1]
+in vec2 aUv;       // atlas UV at this corner
 
 uniform float u_prog;     // 0 = piled, 1 = home
 uniform float u_pxSize;   // disc radius in pixels
 uniform float u_reverse;  // 0 = museum->home, 1 = home->museum
 
-varying vec2 v_uv;
-varying vec2 v_local;
-varying float v_flight;   // 1 while airborne, for the fragment warm-up
+out vec2 v_uv;
+out vec2 v_local;
+out float v_flight;   // 1 while airborne, for the fragment warm-up
 
 const float PI = 3.14159265;
-const float S = 6.0;          // stagger spread
+const float S = 6.0;            // stagger spread
 const float LIFT_BASE = 1.8e5;  // metres of arc apex for a short hop
 const float LIFT_SPAN = 1.9e6;  // extra apex metres for a half-globe arc
 
@@ -74,21 +76,21 @@ void main() {
 export const DISC_FRAGMENT = /* glsl */ `
 uniform sampler2D u_atlas;
 
-varying vec2 v_uv;
-varying vec2 v_local;
-varying float v_flight;
+in vec2 v_uv;
+in vec2 v_local;
+in float v_flight;
 
 void main() {
   float r = length(v_local);
   if (r > 1.0) discard;
 
-  vec4 tex = texture2D(u_atlas, v_uv);
+  vec4 tex = texture(u_atlas, v_uv);
   float edge = smoothstep(1.0, 0.88, r); // soft circular rim
   float a = tex.a * edge;
   if (a < 0.02) discard;
 
   // Warm the disc slightly while it is airborne.
   vec3 col = tex.rgb + v_flight * vec3(0.16, 0.10, 0.03);
-  gl_FragColor = vec4(col, a);
+  out_FragColor = vec4(col, a);
 }
 `;
