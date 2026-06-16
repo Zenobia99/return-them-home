@@ -54,6 +54,7 @@ export function buildPositions(artifacts) {
   const enu = Cesium.Transforms.eastNorthUpToFixedFrame(anchor);
 
   const groups = Array.from({ length: ATLAS.sheets }, () => []);
+  const flat = []; // every disc, with its distance from the museum
 
   artifacts.forEach((a, i) => {
     const rnd = mulberry(i + 11);
@@ -81,14 +82,24 @@ export function buildPositions(artifacts) {
       new Cesium.Cartesian3()
     );
 
-    const sheet = a.atlas.atlas_index;
-    groups[sheet].push({
+    const disc = {
       home,
       museum,
       u: a.atlas.u,
       v: a.atlas.v,
       index: i,
-    });
+      ord: 0, // filled in below once all distances are known
+    };
+    groups[a.atlas.atlas_index].push(disc);
+    flat.push({ disc, dist: Cesium.Cartesian3.distance(home, anchor) });
+  });
+
+  // Flight order: nearest origins leave the pile first, so the swarm ripples
+  // outward. ord is normalised to [0,1]; the shader staggers each flight by it.
+  flat.sort((p, q) => p.dist - q.dist);
+  const last = Math.max(flat.length - 1, 1);
+  flat.forEach((p, rank) => {
+    p.disc.ord = rank / last;
   });
 
   return groups;

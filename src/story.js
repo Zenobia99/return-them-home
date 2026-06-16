@@ -1,0 +1,77 @@
+import * as Cesium from 'cesium';
+
+// Length of a full run (pile -> home, or home -> pile), in seconds.
+const RUN_SECS = 16;
+
+function easeInOutSine(x) {
+  return -(Math.cos(Math.PI * x) - 1) / 2;
+}
+
+// Drives the disc progress uniform and the camera through the narrative.
+// Phase 3 covers the two core passes:
+//   returnHome() — stream the artefacts out of the pile to their origins
+//   gather()     — reverse: pull them back to the British Museum
+export class Story {
+  constructor(viewer, discs) {
+    this.viewer = viewer;
+    this.discs = discs;
+    this.phase = 'museum'; // museum | returning | home | gathering
+    this._raf = 0;
+  }
+
+  // A wide view that frames Europe-Africa-Asia so most arcs are visible.
+  flyGlobal(duration = 3.5) {
+    this.viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(12.0, 24.0, 2.4e7),
+      orientation: {
+        heading: 0.0,
+        pitch: Cesium.Math.toRadians(-90.0),
+        roll: 0.0,
+      },
+      duration,
+    });
+  }
+
+  _run(reverse, onDone) {
+    cancelAnimationFrame(this._raf);
+    this.discs.reverse = reverse;
+    this.discs.prog = 0; // snap to the start (pile end of this direction)
+    const t0 = performance.now();
+    const tick = () => {
+      const raw = Math.min((performance.now() - t0) / (RUN_SECS * 1000), 1);
+      this.discs.prog = easeInOutSine(raw);
+      if (raw < 1) {
+        this._raf = requestAnimationFrame(tick);
+      } else if (onDone) {
+        onDone();
+      }
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  // Pile -> origins.
+  returnHome() {
+    this.phase = 'returning';
+    this.flyGlobal();
+    this._run(0.0, () => {
+      this.phase = 'home';
+    });
+  }
+
+  // Origins -> pile.
+  gather() {
+    this.phase = 'gathering';
+    this.flyGlobal();
+    this._run(1.0, () => {
+      this.phase = 'museum';
+    });
+  }
+
+  // Snap to the piled state at the museum without animating (opening shot).
+  pileNow() {
+    cancelAnimationFrame(this._raf);
+    this.discs.reverse = 0;
+    this.discs.prog = 0;
+    this.phase = 'museum';
+  }
+}

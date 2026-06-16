@@ -18,3 +18,67 @@ html, body {
 
 /* Cesium's default widget credits/overlays are kept minimal for the
    cinematic framing; the toolbar is hidden via the Viewer options. */
+
+#ui {
+  position: fixed;
+  left: 28px;
+  bottom: 28px;
+  z-index: 10;
+  max-width: 420px;
+  pointer-events: none; /* let drags through; buttons re-enable below */
+}
+
+#ui h1 {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.85);
+}
+
+#ui .tagline {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #cfd2d6;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.9);
+}
+
+#ui .controls {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#ui button {
+  pointer-events: auto;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(20, 22, 26, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 11px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+
+#ui button:hover {
+  background: rgba(40, 44, 50, 0.85);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+#ui button:active {
+  transform: translateY(1px);
+}
+
+#ui button.primary {
+  background: linear-gradient(180deg, #e8b24a, #d2932a);
+  border-color: #e8b24a;
+  color: #1a1205;
+}
+
+#ui button.primary:hover {
+  background: linear-gradient(180deg, #f0bd58, #dca035);
+}

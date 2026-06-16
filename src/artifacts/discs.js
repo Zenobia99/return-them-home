@@ -2,7 +2,7 @@ import * as Cesium from 'cesium';
 import { ATLAS } from './data.js';
 import { DISC_VERTEX, DISC_FRAGMENT } from './shaders.js';
 
-const ATTRIBUTE_LOCATIONS = { aHome: 0, aMuseum: 1, aCorner: 2, aUv: 3 };
+const ATTRIBUTE_LOCATIONS = { aHome: 0, aMuseum: 1, aCorner: 2, aUv: 3, aOrd: 4 };
 
 // Quad corners (screen-space, [-1,1]) and the matching fraction of the atlas
 // tile to sample. Photos read upright: corner.y = +1 is the top of the disc
@@ -24,10 +24,11 @@ const CORNER_UV = [
 // One draw call per atlas sheet: builds a VertexArray of camera-facing quads,
 // binds that sheet's texture, and renders in the translucent pass.
 class SheetBatch {
-  constructor(group, getTime, getPxSize) {
+  constructor(group, getProg, getPxSize, getReverse) {
     this.group = group;
-    this._getTime = getTime;
+    this._getProg = getProg;
     this._getPxSize = getPxSize;
+    this._getReverse = getReverse;
     this._va = null;
     this._sp = null;
     this._rs = null;
@@ -50,6 +51,7 @@ class SheetBatch {
     const museum = new Float32Array(n * 4 * 3);
     const corner = new Float32Array(n * 4 * 2);
     const uv = new Float32Array(n * 4 * 2);
+    const ord = new Float32Array(n * 4);
     const indices = new Uint16Array(n * 6);
     const ts = ATLAS.tileScale;
 
@@ -68,6 +70,7 @@ class SheetBatch {
         corner[vi * 2 + 1] = CORNERS[k][1];
         uv[vi * 2] = d.u + CORNER_UV[k][0] * ts;
         uv[vi * 2 + 1] = d.v + CORNER_UV[k][1] * ts;
+        ord[vi] = d.ord;
       }
       const o = i * 6;
       indices[o] = base;
@@ -97,6 +100,7 @@ class SheetBatch {
         { index: 1, vertexBuffer: vb(museum), componentsPerAttribute: 3, componentDatatype: FLOAT },
         { index: 2, vertexBuffer: vb(corner), componentsPerAttribute: 2, componentDatatype: FLOAT },
         { index: 3, vertexBuffer: vb(uv), componentsPerAttribute: 2, componentDatatype: FLOAT },
+        { index: 4, vertexBuffer: vb(ord), componentsPerAttribute: 1, componentDatatype: FLOAT },
       ],
       indexBuffer,
     });
@@ -139,8 +143,9 @@ class SheetBatch {
         boundingVolume: this._boundingVolume,
         count: this._indexCount,
         uniformMap: {
-          u_t: () => self._getTime(),
+          u_prog: () => self._getProg(),
           u_pxSize: () => self._getPxSize(),
+          u_reverse: () => self._getReverse(),
           u_atlas: () => self._texture,
         },
       });
@@ -166,14 +171,16 @@ class SheetBatch {
 // atlas textures asynchronously.
 export class PhotoDiscs {
   constructor(scene, groups) {
-    this.time = 1.0; // Phase 2: render at home positions
+    this.prog = 1.0; // 0 = piled at the museum, 1 = home. Starts home.
+    this.reverse = 0.0; // 0 = museum->home, 1 = home->museum
     this.pxSize = 5.0; // disc radius in pixels
     this._batches = groups.map(
       (g) =>
         new SheetBatch(
           g,
-          () => this.time,
-          () => this.pxSize
+          () => this.prog,
+          () => this.pxSize,
+          () => this.reverse
         )
     );
     this._loadTextures(scene.context);

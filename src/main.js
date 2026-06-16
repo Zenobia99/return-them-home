@@ -4,6 +4,7 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { addMuseum, flyToHeroView } from './museum.js';
 import { loadArtifacts, buildPositions } from './artifacts/data.js';
 import { addPhotoDiscs } from './artifacts/discs.js';
+import { Story } from './story.js';
 
 // Cesium Ion powers world-scale satellite imagery and terrain. The token is
 // read from the environment (VITE_CESIUM_ION_TOKEN) — never hard-coded, never
@@ -71,16 +72,26 @@ async function init() {
   await addMuseum(viewer);
   flyToHeroView(viewer, /* animate */ false);
 
-  // Phase 2: load the 5,000 artefacts and render them as photo-discs. The
-  // discs hold u_t = 1.0 for now, so they sit at their true origin countries
-  // (Phase 3 will animate u_t from 0 -> 1 to stream them home from the pile).
+  // Phase 2: load the 5,000 artefacts and render them as photo-discs.
   const artifacts = await loadArtifacts();
   const groups = buildPositions(artifacts);
   const discs = addPhotoDiscs(viewer, groups);
 
+  // Phase 3: the narrative. Open with everything piled on the museum, then
+  // stream the objects home (or gather them back) on the buttons.
+  const story = new Story(viewer, discs);
+  story.pileNow();
+  document
+    .getElementById('btn-return')
+    .addEventListener('click', () => story.returnHome());
+  document
+    .getElementById('btn-gather')
+    .addEventListener('click', () => story.gather());
+
   // Expose for console debugging during development.
   window.viewer = viewer;
   window.discs = discs;
+  window.story = story;
 }
 
 init().catch((err) => {
