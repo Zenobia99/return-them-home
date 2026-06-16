@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { flyToEntrance } from './museum.js';
 
 // Length of a full run (pile -> home, or home -> pile), in seconds.
 const RUN_SECS = 16;
@@ -53,12 +54,14 @@ export class Story {
     this._raf = requestAnimationFrame(tick);
   }
 
-  // Pile -> origins.
+  // Pile -> origins. When everything has arrived, descend to a street-level
+  // view of the now-empty museum entrance as the closing shot.
   returnHome() {
     this.phase = 'returning';
     this.flyGlobal();
     this._run(0.0, () => {
       this.phase = 'home';
+      setTimeout(() => flyToEntrance(this.viewer), 700);
     });
   }
 

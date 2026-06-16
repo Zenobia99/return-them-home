@@ -1,7 +1,7 @@
 import './style.css';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { addMuseum, flyToHeroView } from './museum.js';
+import { addMuseum, flyToHeroView, flyToEntrance, logCam } from './museum.js';
 import { addBordersAndLabels } from './borders.js';
 import { loadArtifacts, buildPositions } from './artifacts/data.js';
 import { addPhotoDiscs } from './artifacts/discs.js';
@@ -130,6 +130,9 @@ async function init() {
 
   window.discs = discs;
   window.story = story;
+  // Console helpers for framing the entrance shot live.
+  window.logCam = () => logCam(viewer);
+  window.flyToEntrance = () => flyToEntrance(viewer);
 }
 
 init().catch((err) => {

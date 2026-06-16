@@ -78,3 +78,59 @@ export function flyToHeroView(viewer, animate = true) {
     viewer.camera.setView(HERO_VIEW);
   }
 }
+
+// Street-level framing of the entrance, in east-north-up metres around the
+// museum's ground point. The camera sits SE of the building (the columned
+// front faces SE) at street height and looks back at the entrance. These are
+// a starting guess — drag to the perfect spot in the browser and run
+// `logCam()` in the console to capture exact values, then we bake them in.
+export const ENTRANCE = {
+  camEast: 120, // metres east of centre
+  camNorth: -110, // metres south of centre
+  camUp: 16, // camera height (street level)
+  lookUp: 22, // height of the point we aim at on the facade
+};
+
+export function flyToEntrance(viewer, duration = 4.5) {
+  const ellipsoid = viewer.scene.globe.ellipsoid;
+  const ground = Cesium.Cartesian3.fromDegrees(MUSEUM.lon, MUSEUM.lat, 0);
+  const enu = Cesium.Transforms.eastNorthUpToFixedFrame(ground);
+
+  const camPos = Cesium.Matrix4.multiplyByPoint(
+    enu,
+    new Cesium.Cartesian3(ENTRANCE.camEast, ENTRANCE.camNorth, ENTRANCE.camUp),
+    new Cesium.Cartesian3()
+  );
+  const target = Cesium.Matrix4.multiplyByPoint(
+    enu,
+    new Cesium.Cartesian3(0, 0, ENTRANCE.lookUp),
+    new Cesium.Cartesian3()
+  );
+
+  const direction = Cesium.Cartesian3.normalize(
+    Cesium.Cartesian3.subtract(target, camPos, new Cesium.Cartesian3()),
+    new Cesium.Cartesian3()
+  );
+  const up = ellipsoid.geodeticSurfaceNormal(camPos, new Cesium.Cartesian3());
+
+  viewer.camera.flyTo({
+    destination: camPos,
+    orientation: { direction, up },
+    duration,
+  });
+}
+
+// Console helper: prints the current camera pose in a copy-paste friendly form
+// so a hand-framed view can be baked into ENTRANCE_VIEW / HERO_VIEW.
+export function logCam(viewer) {
+  const c = viewer.camera;
+  const carto = c.positionCartographic;
+  console.log(
+    'destination: Cesium.Cartesian3.fromDegrees(' +
+      `${Cesium.Math.toDegrees(carto.longitude)}, ` +
+      `${Cesium.Math.toDegrees(carto.latitude)}, ${carto.height})\n` +
+      `heading: ${Cesium.Math.toDegrees(c.heading)}\n` +
+      `pitch:   ${Cesium.Math.toDegrees(c.pitch)}\n` +
+      `roll:    ${Cesium.Math.toDegrees(c.roll)}`
+  );
+}
