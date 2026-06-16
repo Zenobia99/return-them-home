@@ -2,6 +2,8 @@ import './style.css';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { addMuseum, flyToHeroView } from './museum.js';
+import { loadArtifacts, buildPositions } from './artifacts/data.js';
+import { addPhotoDiscs } from './artifacts/discs.js';
 
 // Cesium Ion powers world-scale satellite imagery and terrain. The token is
 // read from the environment (VITE_CESIUM_ION_TOKEN) — never hard-coded, never
@@ -65,12 +67,20 @@ async function init() {
   viewer.cesiumWidget.creditContainer.style.display = 'none';
 
   // Phase 1: seat the real British Museum at Bloomsbury and open on the
-  // hero view. The repatriation animation (Phases 2-4) builds on top of this.
+  // hero view. The repatriation animation (Phases 3-4) builds on top of this.
   await addMuseum(viewer);
   flyToHeroView(viewer, /* animate */ false);
 
+  // Phase 2: load the 5,000 artefacts and render them as photo-discs. The
+  // discs hold u_t = 1.0 for now, so they sit at their true origin countries
+  // (Phase 3 will animate u_t from 0 -> 1 to stream them home from the pile).
+  const artifacts = await loadArtifacts();
+  const groups = buildPositions(artifacts);
+  const discs = addPhotoDiscs(viewer, groups);
+
   // Expose for console debugging during development.
   window.viewer = viewer;
+  window.discs = discs;
 }
 
 init().catch((err) => {
