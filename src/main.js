@@ -2,6 +2,7 @@ import './style.css';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { addMuseum, flyToHeroView } from './museum.js';
+import { addBordersAndLabels } from './borders.js';
 import { loadArtifacts, buildPositions } from './artifacts/data.js';
 import { addPhotoDiscs } from './artifacts/discs.js';
 import { Story } from './story.js';
@@ -103,6 +104,13 @@ async function init() {
   // view.
   await addMuseum(viewer);
   flyToHeroView(viewer, /* animate */ false);
+
+  // Country borders + name labels (Natural Earth 110m), guarded.
+  try {
+    await addBordersAndLabels(viewer);
+  } catch (e) {
+    console.warn('[return-them-home] borders/labels failed:', e);
+  }
 
   // Phase 2: load the 5,000 artefacts and render them as photo-discs.
   const artifacts = await loadArtifacts();

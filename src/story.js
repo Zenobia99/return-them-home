@@ -17,12 +17,16 @@ export class Story {
     this.discs = discs;
     this.phase = 'museum'; // museum | returning | home | gathering
     this._raf = 0;
+    // Altitude of the pulled-back world view (metres). Closer than a full
+    // earth-from-space shot so the satellite imagery still reads. Tweakable
+    // live via `story.globalHeight`.
+    this.globalHeight = 1.45e7;
   }
 
   // A wide view that frames Europe-Africa-Asia so most arcs are visible.
   flyGlobal(duration = 3.5) {
     this.viewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(12.0, 24.0, 2.4e7),
+      destination: Cesium.Cartesian3.fromDegrees(12.0, 28.0, this.globalHeight),
       orientation: {
         heading: 0.0,
         pitch: Cesium.Math.toRadians(-90.0),
