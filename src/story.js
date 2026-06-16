@@ -37,9 +37,23 @@ export class Story {
     });
   }
 
+  // Tween the global disc opacity (clean closing frame).
+  _fadeDiscs(to, secs) {
+    cancelAnimationFrame(this._fadeRaf);
+    const from = this.discs.opacity;
+    const t0 = performance.now();
+    const tick = () => {
+      const raw = Math.min((performance.now() - t0) / (secs * 1000), 1);
+      this.discs.opacity = from + (to - from) * easeInOutSine(raw);
+      if (raw < 1) this._fadeRaf = requestAnimationFrame(tick);
+    };
+    this._fadeRaf = requestAnimationFrame(tick);
+  }
+
   _run(reverse, onDone) {
     cancelAnimationFrame(this._raf);
     this.discs.reverse = reverse;
+    this.discs.opacity = 1.0; // ensure discs are visible for the run
     this.discs.prog = 0; // snap to the start (pile end of this direction)
     const t0 = performance.now();
     const tick = () => {
@@ -74,7 +88,12 @@ export class Story {
     this._run(1.0, () => {
       this.phase = 'museum';
       flyToHeroView(this.viewer, /* animate */ true); // fly back to the museum
-      setTimeout(() => flyToEntrance(this.viewer), 3200); // then to the entrance
+      setTimeout(() => {
+        flyToEntrance(this.viewer); // descend to the entrance
+        // The artefacts are back in the collection — fade the pile out so the
+        // closing entrance frame is a clean shot of the building.
+        this._fadeDiscs(0.0, 3.5);
+      }, 3200);
     });
   }
 

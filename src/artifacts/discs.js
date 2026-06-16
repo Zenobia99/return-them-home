@@ -24,11 +24,13 @@ const CORNER_UV = [
 // One draw call per atlas sheet: builds a VertexArray of camera-facing quads,
 // binds that sheet's texture, and renders in the translucent pass.
 class SheetBatch {
-  constructor(group, getProg, getPxSize, getReverse) {
+  constructor(group, getProg, getPxSize, getReverse, getOpacity, getAspect) {
     this.group = group;
     this._getProg = getProg;
     this._getPxSize = getPxSize;
     this._getReverse = getReverse;
+    this._getOpacity = getOpacity;
+    this._getAspect = getAspect;
     this._va = null;
     this._sp = null;
     this._rs = null;
@@ -146,6 +148,8 @@ class SheetBatch {
           u_prog: () => self._getProg(),
           u_pxSize: () => self._getPxSize(),
           u_reverse: () => self._getReverse(),
+          u_opacity: () => self._getOpacity(),
+          u_aspect: () => self._getAspect(),
           u_atlas: () => self._texture,
         },
       });
@@ -174,13 +178,17 @@ export class PhotoDiscs {
     this.prog = 1.0; // 0 = piled at the museum, 1 = home. Starts home.
     this.reverse = 0.0; // 0 = museum->home, 1 = home->museum
     this.pxSize = 7.0; // disc radius in pixels
+    this.opacity = 1.0; // global fade (used for the clean closing frame)
+    this.aspect = 1.0; // x-axis size correction for true circles
     this._batches = groups.map(
       (g) =>
         new SheetBatch(
           g,
           () => this.prog,
           () => this.pxSize,
-          () => this.reverse
+          () => this.reverse,
+          () => this.opacity,
+          () => this.aspect
         )
     );
     this._loadTextures(scene.context);

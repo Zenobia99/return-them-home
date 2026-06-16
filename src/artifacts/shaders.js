@@ -24,6 +24,7 @@ in vec2 aUv;       // atlas UV at this corner
 uniform float u_prog;     // 0 = piled, 1 = home
 uniform float u_pxSize;   // disc radius in pixels
 uniform float u_reverse;  // 0 = museum->home, 1 = home->museum
+uniform float u_aspect;   // x-axis size correction (1.0 = none)
 
 out vec2 v_uv;
 out vec2 v_local;
@@ -63,9 +64,12 @@ void main() {
   vec4 clip = czm_modelViewProjection * vec4(worldPos, 1.0);
 
   // Offset the corner in screen space so the quad always faces the camera and
-  // keeps a constant pixel size regardless of distance.
+  // keeps a constant pixel size regardless of distance. u_aspect corrects any
+  // residual x/y stretch so the discs render as true circles.
   vec2 ndcPerPx = 2.0 / czm_viewport.zw;
-  clip.xy += aCorner * u_pxSize * ndcPerPx * clip.w;
+  vec2 off = aCorner * u_pxSize * ndcPerPx;
+  off.x *= u_aspect;
+  clip.xy += off * clip.w;
 
   gl_Position = clip;
   v_uv = aUv;
@@ -75,6 +79,7 @@ void main() {
 
 export const DISC_FRAGMENT = /* glsl */ `
 uniform sampler2D u_atlas;
+uniform float u_opacity;  // global fade (1 = opaque)
 
 in vec2 v_uv;
 in vec2 v_local;
@@ -86,7 +91,7 @@ void main() {
 
   vec4 tex = texture(u_atlas, v_uv);
   float edge = smoothstep(1.0, 0.88, r); // soft circular rim
-  float a = tex.a * edge;
+  float a = tex.a * edge * u_opacity;
   if (a < 0.02) discard;
 
   // Warm the disc slightly while it is airborne.
