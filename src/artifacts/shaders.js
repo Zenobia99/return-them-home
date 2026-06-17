@@ -87,12 +87,17 @@ in float v_flight;
 
 void main() {
   float r = length(v_local);
-  if (r > 1.0) discard;
+
+  // Resolution-independent anti-aliased circular edge: fade the alpha across
+  // roughly one pixel of the rim using screen-space derivatives, instead of a
+  // hard discard (which stair-steps). Smooth at any disc size.
+  float aa = fwidth(r);
+  float mask = 1.0 - smoothstep(1.0 - aa, 1.0 + aa, r);
+  if (mask <= 0.0) discard;
 
   vec4 tex = texture(u_atlas, v_uv);
-  float edge = smoothstep(1.0, 0.88, r); // soft circular rim
-  float a = tex.a * edge * u_opacity;
-  if (a < 0.02) discard;
+  float a = tex.a * mask * u_opacity;
+  if (a < 0.004) discard;
 
   // Warm the disc slightly while it is airborne.
   vec3 col = tex.rgb + v_flight * vec3(0.16, 0.10, 0.03);

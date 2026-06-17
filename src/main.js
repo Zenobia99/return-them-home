@@ -94,6 +94,7 @@ async function init() {
 
   // Cinematic atmosphere.
   const scene = viewer.scene;
+  scene.msaaSamples = 4; // smoother building/border/disc geometry edges
   scene.globe.enableLighting = true;
   scene.skyAtmosphere.show = true;
   scene.sun.show = true;
