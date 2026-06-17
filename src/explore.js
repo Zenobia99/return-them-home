@@ -21,7 +21,6 @@ const TILES_PER_ROW = ATLAS.atlasSize / ATLAS.tileSize; // 32
 const THUMB = 76; // thumbnail box size, px
 // Hide all labels when zoomed further out than this (camera height, metres).
 const LABEL_MAX_HEIGHT = 2.3e7;
-const R_EARTH = 6378137.0; // WGS84 equatorial radius, for the horizon cull
 
 function displayName(originCountry) {
   return DISPLAY[originCountry] || originCountry || 'Unknown';
@@ -107,52 +106,39 @@ export function initExplore(viewer, artifacts, discList, discs) {
   const camN = new Cesium.Cartesian3();
   const posN = new Cesium.Cartesian3();
 
-  function hide(L) {
-    if (L.visible) {
-      L.el.style.display = 'none';
-      L.visible = false;
-    }
-  }
-
   scene.postRender.addEventListener(() => {
     const cam = scene.camera;
     const tooFar = cam.positionCartographic.height > LABEL_MAX_HEIGHT;
     const w = scene.canvas.clientWidth;
     const h = scene.canvas.clientHeight;
-    // Horizon cull: a surface point is visible only if its angle from the
-    // sub-camera point is within the horizon angle for the camera altitude,
-    // i.e. cos(angle) > R / |camera|. Reliable for far-side / behind points.
     const camMag = Cesium.Cartesian3.magnitude(cam.positionWC);
-    const horizonCos = R_EARTH / camMag;
     Cesium.Cartesian3.normalize(cam.positionWC, camN);
 
     for (const L of labels) {
-      if (tooFar) {
-        hide(L);
-        continue;
+      let show = !tooFar;
+      // Horizon cull: a surface point at central angle gamma from the
+      // sub-camera point is visible iff cos(gamma) >= |point| / |camera|
+      // (using the point's own radius, so it holds at any latitude/altitude).
+      if (show) {
+        Cesium.Cartesian3.normalize(L.position, posN);
+        const horizonCos = Cesium.Cartesian3.magnitude(L.position) / camMag;
+        if (Cesium.Cartesian3.dot(camN, posN) < horizonCos) show = false;
       }
-      Cesium.Cartesian3.normalize(L.position, posN);
-      if (Cesium.Cartesian3.dot(camN, posN) < horizonCos) {
-        hide(L); // beyond the horizon (far side of the globe)
-        continue;
+      let p = null;
+      if (show) {
+        p = Cesium.SceneTransforms.worldToWindowCoordinates(scene, L.position, win);
+        if (!p || !(p.x >= 0 && p.x <= w && p.y >= 0 && p.y <= h)) show = false;
       }
-      const p = Cesium.SceneTransforms.worldToWindowCoordinates(
-        scene,
-        L.position,
-        win
-      );
-      // Cull anything that projects off-screen (or to NaN).
-      if (!p || !(p.x >= 0 && p.x <= w && p.y >= 0 && p.y <= h)) {
-        hide(L);
-        continue;
-      }
-      if (!L.visible) {
-        L.el.style.display = '';
+      if (show) {
         L.visible = true;
+        L.sx = p.x;
+        L.sy = p.y;
+        L.el.style.display = '';
+        L.el.style.transform = `translate(-50%, -50%) translate(${p.x}px, ${p.y}px)`;
+      } else if (L.visible || L.el.style.display !== 'none') {
+        L.visible = false;
+        L.el.style.display = 'none';
       }
-      L.sx = p.x;
-      L.sy = p.y;
-      L.el.style.transform = `translate(-50%, -50%) translate(${p.x}px, ${p.y}px)`;
     }
   });
 
@@ -179,21 +165,21 @@ export function initExplore(viewer, artifacts, discList, discs) {
     if (discs.prog < 0.01) return discs.reverse ? d.home : d.museum;
     return null;
   }
-  function onNearSide(pos, camN, horizonCos) {
+  function onNearSide(pos, camNorm, camMag) {
     Cesium.Cartesian3.normalize(pos, dN);
-    return Cesium.Cartesian3.dot(camN, dN) >= horizonCos;
+    return Cesium.Cartesian3.dot(camNorm, dN) >= Cesium.Cartesian3.magnitude(pos) / camMag;
   }
   function discAt(x, y) {
     if (discs.prog > 0.01 && discs.prog < 0.99) return null; // mid-flight
     const cam = scene.camera;
     const camN2 = Cesium.Cartesian3.normalize(cam.positionWC, new Cesium.Cartesian3());
-    const horizonCos = R_EARTH / Cesium.Cartesian3.magnitude(cam.positionWC);
+    const camMag = Cesium.Cartesian3.magnitude(cam.positionWC);
     const thresh = discs.pxSize + 5;
     let best = null;
     let bestD2 = thresh * thresh;
     for (const d of discList) {
       const pos = discRestPosition(d);
-      if (!pos || !onNearSide(pos, camN2, horizonCos)) continue;
+      if (!pos || !onNearSide(pos, camN2, camMag)) continue;
       const p = Cesium.SceneTransforms.worldToWindowCoordinates(
         scene,
         pos,
