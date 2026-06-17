@@ -56,7 +56,7 @@ export function initExplore(viewer, artifacts) {
 
   function openCountry(g) {
     panelTitle.textContent = g.name;
-    panelCount.textContent = `${g.items.length} object${g.items.length === 1 ? '' : 's'} — select one for details`;
+    panelCount.textContent = `${g.items.length} object${g.items.length === 1 ? '' : 's'}`;
     grid.innerHTML = '';
     for (const a of g.items) {
       const t = document.createElement('button');
@@ -75,6 +75,11 @@ export function initExplore(viewer, artifacts) {
   }
 
   // ---- HTML overlay labels, positioned each frame -----------------------
+  // The labels are pointer-events:none so the globe always drags underneath
+  // them (capturing the pointer would feel broken). Click + hover are handled
+  // by hit-testing the label rectangles against Cesium's own click/move events
+  // — and Cesium's LEFT_CLICK already ignores camera drags, so a drag rotates
+  // the globe and never selects a country.
   const layer = document.createElement('div');
   layer.id = 'origin-labels';
   document.body.appendChild(layer);
@@ -83,12 +88,18 @@ export function initExplore(viewer, artifacts) {
   for (const g of groups.values()) {
     const lng = g.sumLng / g.items.length;
     const lat = g.sumLat / g.items.length;
-    const el = document.createElement('button');
+    const el = document.createElement('div');
     el.className = 'country-label';
     el.textContent = g.name;
-    el.addEventListener('click', () => openCountry(g));
     layer.appendChild(el);
-    labels.push({ el, position: Cesium.Cartesian3.fromDegrees(lng, lat) });
+    labels.push({
+      el,
+      group: g,
+      position: Cesium.Cartesian3.fromDegrees(lng, lat),
+      sx: 0,
+      sy: 0,
+      visible: false,
+    });
   }
 
   const occluder = new Cesium.EllipsoidalOccluder(
@@ -102,7 +113,10 @@ export function initExplore(viewer, artifacts) {
     occluder.cameraPosition = scene.camera.positionWC;
     for (const L of labels) {
       if (tooFar || !occluder.isPointVisible(L.position)) {
-        L.el.style.display = 'none';
+        if (L.visible) {
+          L.el.style.display = 'none';
+          L.visible = false;
+        }
         continue;
       }
       const p = Cesium.SceneTransforms.worldToWindowCoordinates(
@@ -111,13 +125,51 @@ export function initExplore(viewer, artifacts) {
         win
       );
       if (!p) {
-        L.el.style.display = 'none';
+        if (L.visible) {
+          L.el.style.display = 'none';
+          L.visible = false;
+        }
         continue;
       }
-      L.el.style.display = '';
+      if (!L.visible) {
+        L.el.style.display = '';
+        L.visible = true;
+      }
+      L.sx = p.x;
+      L.sy = p.y;
       L.el.style.transform = `translate(-50%, -50%) translate(${p.x}px, ${p.y}px)`;
     }
   });
+
+  // Hit-test a screen point against the visible label rectangles.
+  function labelAt(x, y) {
+    for (const L of labels) {
+      if (!L.visible) continue;
+      const w = L.el.offsetWidth / 2;
+      const h = L.el.offsetHeight / 2;
+      if (x >= L.sx - w && x <= L.sx + w && y >= L.sy - h && y <= L.sy + h) {
+        return L;
+      }
+    }
+    return null;
+  }
+
+  const handler = viewer.screenSpaceEventHandler;
+  handler.setInputAction((movement) => {
+    const L = labelAt(movement.position.x, movement.position.y);
+    if (L) openCountry(L.group);
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+  let hovered = null;
+  handler.setInputAction((movement) => {
+    const L = labelAt(movement.endPosition.x, movement.endPosition.y);
+    if (L !== hovered) {
+      if (hovered) hovered.el.classList.remove('hover');
+      if (L) L.el.classList.add('hover');
+      hovered = L;
+      scene.canvas.style.cursor = L ? 'pointer' : '';
+    }
+  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
   return { groups, openCountry };
 }
