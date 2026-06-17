@@ -1,15 +1,13 @@
 import * as Cesium from 'cesium';
 import { ATLAS } from './artifacts/data.js';
 
-// Phase 4 — exploration. Click a country label to open a panel of that
-// country's artefacts as atlas thumbnails; click a thumbnail to open the
-// detail card. Country labels are generated per origin country at the centroid
-// of that country's artefacts, so every one of the ~88 origins is clickable
-// and sits on its cluster (no reliance on the 110m label names, and small
-// island nations like Sri Lanka work too).
+// Phase 4 — exploration. A clickable label per origin country (rendered as an
+// HTML overlay so it always sits above the discs and is trivially clickable).
+// Click a label to open a panel of that country's artefacts as atlas
+// thumbnails; click a thumbnail to open the detail card.
 
-// Normalise/clean the origin_country values into display names, merging
-// variants (e.g. "Egypt (Coptic)" -> "Egypt") so they share one label/panel.
+// Normalise/clean origin_country values into display names, merging variants
+// (e.g. "Egypt (Coptic)" -> "Egypt") so they share one label/panel.
 const DISPLAY = {
   'Republic of Benin': 'Benin',
   'Democratic Republic of the Congo': 'DR Congo',
@@ -21,12 +19,13 @@ const DISPLAY = {
 
 const TILES_PER_ROW = ATLAS.atlasSize / ATLAS.tileSize; // 32
 const THUMB = 76; // thumbnail box size, px
+// Hide all labels when zoomed further out than this (camera height, metres).
+const LABEL_MAX_HEIGHT = 2.3e7;
 
 function displayName(originCountry) {
   return DISPLAY[originCountry] || originCountry || 'Unknown';
 }
 
-// Set a thumbnail element's background to the artefact's atlas tile.
 function styleThumb(el, art) {
   const { atlas_index: idx, u, v } = art.atlas;
   const sheet = TILES_PER_ROW * THUMB;
@@ -36,6 +35,8 @@ function styleThumb(el, art) {
 }
 
 export function initExplore(viewer, artifacts) {
+  const scene = viewer.scene;
+
   // Group artefacts by display country.
   const groups = new Map();
   for (const a of artifacts) {
@@ -50,47 +51,13 @@ export function initExplore(viewer, artifacts) {
     g.sumLat += a.lat;
   }
 
-  // One clickable label per country, at its artefacts' centroid.
-  const ds = new Cesium.CustomDataSource('origins');
-  const entityCountry = new Map(); // entity.id -> group
-  for (const g of groups.values()) {
-    const lng = g.sumLng / g.items.length;
-    const lat = g.sumLat / g.items.length;
-    const e = ds.entities.add({
-      position: Cesium.Cartesian3.fromDegrees(lng, lat),
-      label: {
-        text: g.name,
-        font: '700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-        fillColor: Cesium.Color.fromCssColorString('#f4f7fa'),
-        outlineColor: Cesium.Color.BLACK.withAlpha(0.9),
-        outlineWidth: 3.5,
-        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-        showBackground: true,
-        backgroundColor: Cesium.Color.BLACK.withAlpha(0.4),
-        backgroundPadding: new Cesium.Cartesian2(8, 5),
-        verticalOrigin: Cesium.VerticalOrigin.CENTER,
-        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0.0, 2.6e7),
-        translucencyByDistance: new Cesium.NearFarScalar(3.0e6, 1.0, 2.6e7, 0.45),
-        scaleByDistance: new Cesium.NearFarScalar(3.0e6, 1.1, 2.0e7, 0.6),
-      },
-    });
-    entityCountry.set(e.id, g);
-  }
-  viewer.dataSources.add(ds);
-
-  // ---- DOM: country panel + detail card -------------------------------
   const { panel, grid, panelTitle, panelCount } = buildPanel();
   const card = buildCard();
 
-  let openThumbs = [];
-
   function openCountry(g) {
     panelTitle.textContent = g.name;
-    panelCount.textContent = `${g.items.length} object${g.items.length === 1 ? '' : 's'}`;
+    panelCount.textContent = `${g.items.length} object${g.items.length === 1 ? '' : 's'} — select one for details`;
     grid.innerHTML = '';
-    openThumbs = g.items;
     for (const a of g.items) {
       const t = document.createElement('button');
       t.className = 'thumb';
@@ -107,14 +74,50 @@ export function initExplore(viewer, artifacts) {
     card.root.classList.add('open');
   }
 
-  // Pointer cursor + click handling on labels.
-  const handler = viewer.screenSpaceEventHandler;
-  handler.setInputAction((movement) => {
-    const picked = viewer.scene.pick(movement.position);
-    if (Cesium.defined(picked) && picked.id && entityCountry.has(picked.id.id)) {
-      openCountry(entityCountry.get(picked.id.id));
+  // ---- HTML overlay labels, positioned each frame -----------------------
+  const layer = document.createElement('div');
+  layer.id = 'origin-labels';
+  document.body.appendChild(layer);
+
+  const labels = [];
+  for (const g of groups.values()) {
+    const lng = g.sumLng / g.items.length;
+    const lat = g.sumLat / g.items.length;
+    const el = document.createElement('button');
+    el.className = 'country-label';
+    el.textContent = g.name;
+    el.addEventListener('click', () => openCountry(g));
+    layer.appendChild(el);
+    labels.push({ el, position: Cesium.Cartesian3.fromDegrees(lng, lat) });
+  }
+
+  const occluder = new Cesium.EllipsoidalOccluder(
+    scene.globe.ellipsoid,
+    scene.camera.positionWC
+  );
+  const win = new Cesium.Cartesian2();
+
+  scene.postRender.addEventListener(() => {
+    const tooFar = scene.camera.positionCartographic.height > LABEL_MAX_HEIGHT;
+    occluder.cameraPosition = scene.camera.positionWC;
+    for (const L of labels) {
+      if (tooFar || !occluder.isPointVisible(L.position)) {
+        L.el.style.display = 'none';
+        continue;
+      }
+      const p = Cesium.SceneTransforms.worldToWindowCoordinates(
+        scene,
+        L.position,
+        win
+      );
+      if (!p) {
+        L.el.style.display = 'none';
+        continue;
+      }
+      L.el.style.display = '';
+      L.el.style.transform = `translate(-50%, -50%) translate(${p.x}px, ${p.y}px)`;
     }
-  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+  });
 
   return { groups, openCountry };
 }
@@ -132,6 +135,7 @@ function buildPanel() {
       </div>
       <button class="cp-close" aria-label="Close">×</button>
     </div>
+    <div class="cp-hint">Select an image to open its full museum card.</div>
     <div class="cp-grid"></div>
   `;
   document.body.appendChild(panel);
