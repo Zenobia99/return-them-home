@@ -21,6 +21,10 @@ export const ATLAS = {
 // high enough to clear the terrain and read clearly.
 const HOME_ALT = 1200;
 
+// Radius (metres) of the deterministic scatter around each origin so that
+// many artefacts sharing one coordinate spread out instead of clumping.
+const HOME_SCATTER_M = 32000;
+
 // Pile geometry around the museum, in local east-north-up metres. A compact
 // gaussian swarm hugging the building so artefacts read as leaving it.
 const PILE_RADIUS = 70; // metres
@@ -62,9 +66,22 @@ export function buildPositions(artifacts) {
 
   artifacts.forEach((a, i) => {
     const rnd = mulberry(i + 11);
+    const jit = mulberry(i + 777); // independent stream for the home scatter
 
-    // Home: true origin, lifted slightly off the surface.
-    const home = Cesium.Cartesian3.fromDegrees(a.lng, a.lat, HOME_ALT);
+    // Home: true origin, lifted slightly off the surface. Many artefacts share
+    // the exact same origin coordinate (a country/region centroid), so we
+    // scatter each one within a small radius around it — otherwise they stack
+    // into a single clump instead of spreading across the country.
+    const jr = HOME_SCATTER_M * Math.sqrt(jit());
+    const ja = jit() * Math.PI * 2;
+    const dLat = (jr * Math.cos(ja)) / 111320;
+    const dLng =
+      (jr * Math.sin(ja)) / (111320 * Math.cos((a.lat * Math.PI) / 180));
+    const home = Cesium.Cartesian3.fromDegrees(
+      a.lng + dLng,
+      a.lat + dLat,
+      HOME_ALT
+    );
 
     // Museum pile slot: gaussian-ish radial scatter, taller near the centre.
     const f = rnd();
