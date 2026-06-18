@@ -254,3 +254,32 @@ html, body {
   border-radius: 4px;
   pointer-events: none;
 }
+
+/* Persistent camera controls (zoom + rotate) */
+#cam-controls {
+  position: fixed;
+  right: 18px;
+  bottom: 34px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 40px 40px;
+  gap: 8px;
+}
+#cam-controls button {
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+  background: rgba(20, 22, 26, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, border-color 0.15s;
+}
+#cam-controls button:hover {
+  background: rgba(232, 178, 74, 0.92);
+  border-color: #e8b24a;
+  color: #1a1205;
+}

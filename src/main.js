@@ -7,10 +7,11 @@ import { loadArtifacts, buildPositions } from './artifacts/data.js';
 import { addPhotoDiscs } from './artifacts/discs.js';
 import { Story } from './story.js';
 import { initExplore } from './explore.js';
+import { mountCameraControls } from './controls.js';
 
 // Visible build stamp so it's obvious which version is actually running
 // (defeats stale dev-server / service-worker confusion).
-const BUILD = 'v9 — compact pile + museum orbit cam';
+const BUILD = 'v10 — pile lift + camera controls';
 console.log(`%c[Return Them Home] build ${BUILD}`, 'color:#e8b24a;font-weight:bold');
 window.addEventListener('DOMContentLoaded', () => {
   const stamp = document.createElement('div');
@@ -161,6 +162,9 @@ async function init() {
   document
     .getElementById('btn-gather')
     .addEventListener('click', run(() => story.gather()));
+
+  // Persistent zoom/rotate controls, available in every section of the app.
+  mountCameraControls(viewer);
 
   window.discs = discs;
   window.story = story;

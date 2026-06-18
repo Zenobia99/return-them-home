@@ -26,11 +26,14 @@ const HOME_ALT = 1200;
 const HOME_SCATTER_M = 32000;
 
 // Pile geometry around the museum, in local east-north-up metres. A compact
-// gaussian swarm hugging the building so artefacts read as leaving it —
-// tightened so it no longer spills well beyond the building footprint.
-const PILE_RADIUS = 42; // metres
-const PILE_TOP = 78;
-const PILE_FLOOR = 6;
+// gaussian swarm hugging the building so artefacts read as leaving it.
+// PILE_BASE_H lifts the swarm onto the terrain/building (the discs use
+// absolute ellipsoid heights, whereas the model is clamped to ground ~+20m in
+// Bloomsbury — without the lift the pile sinks into the building).
+const PILE_BASE_H = 14; // metres above the ellipsoid (approx London ground)
+const PILE_RADIUS = 44; // metres
+const PILE_TOP = 82;
+const PILE_FLOOR = 4;
 
 // Deterministic PRNG (mulberry32) so the pile/jitter are stable across runs.
 function mulberry(seed) {
@@ -69,8 +72,10 @@ export function parseAcqYear(museumNumber) {
 // sheet becomes one draw call binding one atlas texture.
 export function buildPositions(artifacts) {
   const anchor = museumAnchor();
-  // Local frame at the museum to place the pile in east-north-up metres.
-  const enu = Cesium.Transforms.eastNorthUpToFixedFrame(anchor);
+  // Local frame for the pile, lifted to sit on the terrain/building.
+  const enu = Cesium.Transforms.eastNorthUpToFixedFrame(
+    Cesium.Cartesian3.fromDegrees(MUSEUM.lon, MUSEUM.lat, PILE_BASE_H)
+  );
 
   const groups = Array.from({ length: ATLAS.sheets }, () => []);
   const flat = []; // every disc, with its distance from the museum
