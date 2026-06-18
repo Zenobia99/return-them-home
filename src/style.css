@@ -283,3 +283,9 @@ html, body {
   border-color: #e8b24a;
   color: #1a1205;
 }
+#cam-controls button.wide {
+  grid-column: 1 / -1;
+  width: 100%;
+  font-size: 15px;
+  font-weight: 700;
+}
