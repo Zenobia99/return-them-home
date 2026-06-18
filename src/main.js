@@ -178,9 +178,6 @@ async function init() {
   document
     .getElementById('btn-taken')
     .addEventListener('click', run(() => story.watchTaken()));
-  document
-    .getElementById('btn-gather')
-    .addEventListener('click', run(() => story.gather()));
 
   // Persistent zoom/rotate controls, available in every section of the app.
   mountCameraControls(viewer);

@@ -118,7 +118,6 @@ export class Story {
     this.flyGlobal();
     this._run(1.0, 0.0, () => this._closeOnMuseum());
   }
-
   // Shared closing beat: fly back to the comfortable oblique museum view in a
   // single flight (avoids overlapping-flight input locks and stays high enough
   // for normal orbit/zoom controls), fade the pile out for a clean final
