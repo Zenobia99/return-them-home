@@ -70,11 +70,12 @@ export function parseAcqYear(museumNumber) {
 //  - museum: a slot in the pile hugging the British Museum at Bloomsbury.
 // Both are absolute ECEF metres (Cartesian3), grouped by atlas sheet so each
 // sheet becomes one draw call binding one atlas texture.
-export function buildPositions(artifacts) {
+export function buildPositions(artifacts, pileBaseHeight = PILE_BASE_H) {
   const anchor = museumAnchor();
-  // Local frame for the pile, lifted to sit on the terrain/building.
+  // Local frame for the pile, lifted onto the actual museum surface (sampled
+  // from the 3D tiles) so the heap sits on the building, not under it.
   const enu = Cesium.Transforms.eastNorthUpToFixedFrame(
-    Cesium.Cartesian3.fromDegrees(MUSEUM.lon, MUSEUM.lat, PILE_BASE_H)
+    Cesium.Cartesian3.fromDegrees(MUSEUM.lon, MUSEUM.lat, pileBaseHeight)
   );
 
   const groups = Array.from({ length: ATLAS.sheets }, () => []);

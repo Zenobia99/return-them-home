@@ -1,7 +1,7 @@
 import './style.css';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { addMuseum, flyToMuseum, logCam } from './museum.js';
+import { MUSEUM, flyToMuseum, logCam } from './museum.js';
 import { addBorders } from './borders.js';
 import { loadArtifacts, buildPositions } from './artifacts/data.js';
 import { addPhotoDiscs } from './artifacts/discs.js';
@@ -12,7 +12,7 @@ import { addGoogleTiles } from './tiles.js';
 
 // Visible build stamp so it's obvious which version is actually running
 // (defeats stale dev-server / service-worker confusion).
-const BUILD = 'v12 — Google 3D Tiles';
+const BUILD = 'v13 — discs on the real building';
 console.log(`%c[Return Them Home] build ${BUILD}`, 'color:#e8b24a;font-weight:bold');
 window.addEventListener('DOMContentLoaded', () => {
   const stamp = document.createElement('div');
@@ -122,14 +122,25 @@ async function init() {
   scene.fog.enabled = true;
   viewer.cesiumWidget.creditContainer.style.display = 'none';
 
-  // Photorealistic 3D Tiles for a convincing street-level view (hides the
-  // imagery globe when available; otherwise we keep the draped imagery added
-  // above).
+  // Photorealistic 3D Tiles for the street-level view. Google's tiles already
+  // contain the British Museum in full photogrammetry, so we no longer add a
+  // separate model — we just pile the discs onto the real building.
   await addGoogleTiles(viewer);
 
-  // Phase 1: seat the real British Museum at Bloomsbury and open on the
-  // comfortable oblique museum view (orbit/zoom controls available).
-  await addMuseum(viewer);
+  // Sample the actual surface height at the museum (London sits ~50m up in
+  // ellipsoidal height due to the geoid; a fixed offset would bury the pile).
+  let pileBase = 60;
+  if (viewer.scene.sampleHeightSupported) {
+    try {
+      const carto = Cesium.Cartographic.fromDegrees(MUSEUM.lon, MUSEUM.lat);
+      const [sampled] = await viewer.scene.sampleHeightMostDetailed([carto]);
+      if (sampled && isFinite(sampled.height)) pileBase = sampled.height + 4;
+    } catch (e) {
+      console.warn('[return-them-home] surface height sample failed:', e);
+    }
+  }
+
+  // Open on the comfortable oblique museum view (orbit/zoom controls available).
   flyToMuseum(viewer, /* animate */ false);
 
   // Country borders (Natural Earth 110m), guarded.
@@ -141,7 +152,7 @@ async function init() {
 
   // Phase 2: load the 5,000 artefacts and render them as photo-discs.
   const artifacts = await loadArtifacts();
-  const { groups, yearRange } = buildPositions(artifacts);
+  const { groups, yearRange } = buildPositions(artifacts, pileBase);
   const discs = addPhotoDiscs(viewer, groups);
 
   // Phase 3: the narrative. Open piled on the museum; stream home / watch how
