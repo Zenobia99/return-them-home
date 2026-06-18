@@ -1,0 +1,148 @@
+(function(){let e=document.createElement(`link`).relList;if(e&&e.supports&&e.supports(`modulepreload`))return;for(let e of document.querySelectorAll(`link[rel="modulepreload"]`))n(e);new MutationObserver(e=>{for(let t of e)if(t.type===`childList`)for(let e of t.addedNodes)e.tagName===`LINK`&&e.rel===`modulepreload`&&n(e)}).observe(document,{childList:!0,subtree:!0});function t(e){let t={};return e.integrity&&(t.integrity=e.integrity),e.referrerPolicy&&(t.referrerPolicy=e.referrerPolicy),e.crossOrigin===`use-credentials`?t.credentials=`include`:e.crossOrigin===`anonymous`?t.credentials=`omit`:t.credentials=`same-origin`,t}function n(e){if(e.ep)return;e.ep=!0;let n=t(e);fetch(e.href,n)}})();var e={lat:51.51965,lon:-.12718};function t(){return Cesium.Cartesian3.fromDegrees(e.lon,e.lat,0)}var n={destination:Cesium.Cartesian3.fromDegrees(-.12427339830198514,51.517174368264655,175.76778338385463),orientation:{heading:Cesium.Math.toRadians(329.0028),pitch:Cesium.Math.toRadians(-22.0035),roll:0}};function r(e,t=!0){e.camera.cancelFlight(),t?e.camera.flyTo({...n,duration:3,complete:()=>i(e),cancel:()=>i(e)}):e.camera.setView(n)}function i(e){e.scene.screenSpaceCameraController.enableInputs=!0}function a(e){let t=e.camera,n=t.positionCartographic;console.log(`destination: Cesium.Cartesian3.fromDegrees(${Cesium.Math.toDegrees(n.longitude)}, ${Cesium.Math.toDegrees(n.latitude)}, ${n.height})\nheading: ${Cesium.Math.toDegrees(t.heading)}\npitch:   ${Cesium.Math.toDegrees(t.pitch)}\nroll:    ${Cesium.Math.toDegrees(t.roll)}`)}function o(e){return e}function s(e){if(e==null)return o;var t,n,r=e.scale[0],i=e.scale[1],a=e.translate[0],s=e.translate[1];return function(e,o){o||(t=n=0);var c=2,l=e.length,u=Array(l);for(u[0]=(t+=e[0])*r+a,u[1]=(n+=e[1])*i+s;c<l;)u[c]=e[c],++c;return u}}function c(e,t){for(var n,r=e.length,i=r-t;i<--r;)n=e[i],e[i++]=e[r],e[r]=n}function l(e,t){return typeof t==`string`&&(t=e.objects[t]),t.type===`GeometryCollection`?{type:`FeatureCollection`,features:t.geometries.map(function(t){return u(e,t)})}:u(e,t)}function u(e,t){var n=t.id,r=t.bbox,i=t.properties==null?{}:t.properties,a=d(e,t);return n==null&&r==null?{type:`Feature`,properties:i,geometry:a}:r==null?{type:`Feature`,id:n,properties:i,geometry:a}:{type:`Feature`,id:n,bbox:r,properties:i,geometry:a}}function d(e,t){var n=s(e.transform),r=e.arcs;function i(e,t){t.length&&t.pop();for(var i=r[e<0?~e:e],a=0,o=i.length;a<o;++a)t.push(n(i[a],a));e<0&&c(t,o)}function a(e){return n(e)}function o(e){for(var t=[],n=0,r=e.length;n<r;++n)i(e[n],t);return t.length<2&&t.push(t[0]),t}function l(e){for(var t=o(e);t.length<4;)t.push(t[0]);return t}function u(e){return e.map(l)}function d(e){var t=e.type,n;switch(t){case`GeometryCollection`:return{type:t,geometries:e.geometries.map(d)};case`Point`:n=a(e.coordinates);break;case`MultiPoint`:n=e.coordinates.map(a);break;case`LineString`:n=o(e.arcs);break;case`MultiLineString`:n=e.arcs.map(o);break;case`Polygon`:n=u(e.arcs);break;case`MultiPolygon`:n=e.arcs.map(u);break;default:return null}return{type:t,coordinates:n}}return d(t)}var f=Cesium.Color.fromCssColorString(`#5d6f80`).withAlpha(.38);async function p(e){let t=await fetch(`/return-them-home/data/countries-110m.json`);if(!t.ok)throw Error(`Failed to load countries-110m.json (${t.status})`);let n=await t.json(),r=l(n,n.objects.countries),i=new Cesium.CustomDataSource(`borders`);for(let e of r.features){let t=e.geometry,n=t.type===`Polygon`?[t.coordinates]:t.coordinates;for(let e of n)for(let t of e){let e=Cesium.Cartesian3.fromDegreesArray(t.flat());i.entities.add({polyline:{positions:e,width:.8,clampToGround:!0,material:new Cesium.ColorMaterialProperty(f)}})}}return await e.dataSources.add(i),i}var m={sheets:5,atlasSize:4096,tileSize:128,tileScale:128/4096,sheetUrl:e=>`/return-them-home/atlas/atlas_${e}.jpg`},h=1200,g=32e3,_=14,v=28.5,y=14,b=1,x=18,S=-24;function C(e){let t=e>>>0;return function(){t|=0,t=t+1831565813|0;let e=Math.imul(t^t>>>15,1|t);return e=e+Math.imul(e^e>>>7,61|e)^e,((e^e>>>14)>>>0)/4294967296}}async function w(){let e=await fetch(`/return-them-home/data/artifacts.json`);if(!e.ok)throw Error(`Failed to load artifacts.json (${e.status})`);return e.json()}function T(e){if(!e)return null;let t=String(e).match(/(1[5-9]\d{2}|20\d{2})/);if(!t)return null;let n=parseInt(t[1],10);return n>=1500&&n<=2025?n:null}function E(n,r=_){let i=t(),a=Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(e.lon,e.lat,r)),o=Array.from({length:m.sheets},()=>[]),s=[];n.forEach((e,t)=>{let n=C(t+11),r=C(t+777),c=g*Math.sqrt(r()),l=r()*Math.PI*2,u=c*Math.cos(l)/111320,d=c*Math.sin(l)/(111320*Math.cos(e.lat*Math.PI/180)),f=Cesium.Cartesian3.fromDegrees(e.lng+d,e.lat+u,h),p=n(),m=v*Math.sqrt(p),_=n()*Math.PI*2,w=b+(y-b)*Math.exp(-(m*m)/(v*v*.5))*(.6+.4*n()),E=new Cesium.Cartesian3(Math.cos(_)*m+x,Math.sin(_)*m+S,w),D={home:f,museum:Cesium.Matrix4.multiplyByPoint(a,E,new Cesium.Cartesian3),u:e.atlas.u,v:e.atlas.v,index:t,ord:0,ordTake:0};o[e.atlas.atlas_index].push(D);let O=T(e.museum_number);s.push({disc:D,dist:Cesium.Cartesian3.distance(f,i),year:O??9999,hasYear:O!=null})}),s.sort((e,t)=>e.dist-t.dist);let c=Math.max(s.length-1,1);s.forEach((e,t)=>{e.disc.ord=t/c}),s.sort((e,t)=>e.year-t.year),s.forEach((e,t)=>{e.disc.ordTake=t/c});let l=s.filter(e=>e.hasYear).map(e=>e.year);return{groups:o,yearRange:{min:l.length?Math.min(...l):1800,max:l.length?Math.max(...l):2e3}}}function D(t=_){let n=Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(e.lon,e.lat,t)),r=e=>{let t=Cesium.Matrix4.getColumn(n,e,new Cesium.Cartesian4);return new Cesium.Cartesian3(t.x,t.y,t.z)};return{center:Cesium.Matrix4.getTranslation(n,new Cesium.Cartesian3),east:r(0),north:r(1),up:r(2)}}var O=`
+in vec3 aHome;     // ECEF position at the origin country
+in vec3 aMuseum;   // ECEF position in the Bloomsbury pile
+in float aOrd;     // flight order by distance [0,1]
+in float aOrdTake; // flight order by acquisition year [0,1]
+in vec2 aCorner;   // quad corner in [-1, 1]
+in vec2 aUv;       // atlas UV at this corner
+
+uniform float u_prog;     // 0 = piled, 1 = home
+uniform float u_pxSize;   // disc radius in pixels
+uniform float u_reverse;  // 0 = museum->home, 1 = home->museum
+uniform float u_aspect;   // x-axis size correction (1.0 = none)
+uniform float u_useTake;  // 0 = order by distance, 1 = order by acquisition year
+
+// Live pile tuning (dev panel): reposition/scale the pile around its centre
+// in the museum's east-north-up frame without rebuilding the buffers.
+uniform vec3 u_pileCenter;
+uniform vec3 u_eAxis;
+uniform vec3 u_nAxis;
+uniform vec3 u_uAxis;
+uniform vec3 u_pileShift;  // ECEF offset
+uniform float u_pileSpread; // horizontal scale (1 = unchanged)
+uniform float u_pileRise;   // vertical scale (1 = unchanged)
+
+out vec2 v_uv;
+out vec2 v_local;
+out float v_flight;   // 1 while airborne, for the fragment warm-up
+
+const float PI = 3.14159265;
+const float S = 6.0;            // stagger spread
+const float LIFT_BASE = 1.8e5;  // metres of arc apex for a short hop
+const float LIFT_SPAN = 1.9e6;  // extra apex metres for a half-globe arc
+
+// Great-circle interpolation between two ECEF points, with an altitude bump
+// (apex) that grows with the angular span of the arc.
+vec3 arcPoint(vec3 p0, vec3 p1, float t) {
+  float r0 = length(p0), r1 = length(p1);
+  vec3 a = p0 / r0, b = p1 / r1;
+  float c = clamp(dot(a, b), -1.0, 1.0);
+  float ang = acos(c);
+  vec3 dir;
+  if (ang < 1e-3) {
+    dir = normalize(mix(a, b, t));
+  } else {
+    dir = (sin((1.0 - t) * ang) * a + sin(t * ang) * b) / sin(ang);
+  }
+  float lift = (LIFT_BASE + LIFT_SPAN * (ang / PI)) * sin(PI * t);
+  return dir * (mix(r0, r1, t) + lift);
+}
+
+void main() {
+  float ord = mix(aOrd, aOrdTake, u_useTake);
+  float t = clamp(u_prog * (1.0 + S) - ord * S, 0.0, 1.0);
+
+  // Apply live pile tuning: decompose the pile slot into the museum ENU frame,
+  // scale, then add the offset. With spread=rise=1 and shift=0 this is exactly
+  // aMuseum (identity).
+  vec3 rel = aMuseum - u_pileCenter;
+  float e = dot(rel, u_eAxis) * u_pileSpread;
+  float n = dot(rel, u_nAxis) * u_pileSpread;
+  float u = dot(rel, u_uAxis) * u_pileRise;
+  vec3 mus = u_pileCenter + e * u_eAxis + n * u_nAxis + u * u_uAxis + u_pileShift;
+
+  vec3 from = mix(mus, aHome, u_reverse);
+  vec3 to   = mix(aHome, mus, u_reverse);
+  vec3 worldPos = arcPoint(from, to, t);
+
+  v_flight = step(0.0001, t) * step(t, 0.9999);
+
+  vec4 clip = czm_modelViewProjection * vec4(worldPos, 1.0);
+
+  // Offset the corner in screen space so the quad always faces the camera and
+  // keeps a constant pixel size regardless of distance. u_aspect corrects any
+  // residual x/y stretch so the discs render as true circles.
+  vec2 ndcPerPx = 2.0 / czm_viewport.zw;
+  vec2 off = aCorner * u_pxSize * ndcPerPx;
+  off.x *= u_aspect;
+  clip.xy += off * clip.w;
+
+  gl_Position = clip;
+  v_uv = aUv;
+  v_local = aCorner;
+}
+`,k=`
+uniform sampler2D u_atlas;
+uniform float u_opacity;  // global fade (1 = opaque)
+
+in vec2 v_uv;
+in vec2 v_local;
+in float v_flight;
+
+void main() {
+  float r = length(v_local);
+
+  // Resolution-independent anti-aliased circular edge: fade the alpha across
+  // roughly one pixel of the rim using screen-space derivatives, instead of a
+  // hard discard (which stair-steps). Smooth at any disc size.
+  float aa = fwidth(r);
+  float mask = 1.0 - smoothstep(1.0 - aa, 1.0 + aa, r);
+  if (mask <= 0.0) discard;
+
+  vec4 tex = texture(u_atlas, v_uv);
+  float a = tex.a * mask * u_opacity;
+  if (a < 0.004) discard;
+
+  // Warm the disc slightly while it is airborne.
+  vec3 col = tex.rgb + v_flight * vec3(0.16, 0.10, 0.03);
+  out_FragColor = vec4(col, a);
+}
+`,A={aHome:0,aMuseum:1,aCorner:2,aUv:3,aOrd:4,aOrdTake:5},j=[[-1,-1],[1,-1],[1,1],[-1,1]],M=[[0,1],[1,1],[1,0],[0,0]],N=class{constructor(e,t){this.group=e,this.owner=t,this._va=null,this._sp=null,this._rs=null,this._command=null,this._texture=null,this._indexCount=e.length*6,this._boundingVolume=new Cesium.BoundingSphere(Cesium.Cartesian3.ZERO,66e5)}setTexture(e){this._texture=e}_buildVertexArray(e){let t=this.group.length,n=new Float32Array(t*4*3),r=new Float32Array(t*4*3),i=new Float32Array(t*4*2),a=new Float32Array(t*4*2),o=new Float32Array(t*4),s=new Float32Array(t*4),c=new Uint16Array(t*6),l=m.tileScale;for(let e=0;e<t;e++){let t=this.group[e],u=e*4;for(let e=0;e<4;e++){let c=u+e;n[c*3]=t.home.x,n[c*3+1]=t.home.y,n[c*3+2]=t.home.z,r[c*3]=t.museum.x,r[c*3+1]=t.museum.y,r[c*3+2]=t.museum.z,i[c*2]=j[e][0],i[c*2+1]=j[e][1],a[c*2]=t.u+M[e][0]*l,a[c*2+1]=t.v+M[e][1]*l,o[c]=t.ord,s[c]=t.ordTake}let d=e*6;c[d]=u,c[d+1]=u+1,c[d+2]=u+2,c[d+3]=u,c[d+4]=u+2,c[d+5]=u+3}let u=Cesium.ComponentDatatype.FLOAT,d=Cesium.BufferUsage.STATIC_DRAW,f=t=>Cesium.Buffer.createVertexBuffer({context:e,typedArray:t,usage:d}),p=Cesium.Buffer.createIndexBuffer({context:e,typedArray:c,usage:d,indexDatatype:Cesium.IndexDatatype.UNSIGNED_SHORT});this._va=new Cesium.VertexArray({context:e,attributes:[{index:0,vertexBuffer:f(n),componentsPerAttribute:3,componentDatatype:u},{index:1,vertexBuffer:f(r),componentsPerAttribute:3,componentDatatype:u},{index:2,vertexBuffer:f(i),componentsPerAttribute:2,componentDatatype:u},{index:3,vertexBuffer:f(a),componentsPerAttribute:2,componentDatatype:u},{index:4,vertexBuffer:f(o),componentsPerAttribute:1,componentDatatype:u},{index:5,vertexBuffer:f(s),componentsPerAttribute:1,componentDatatype:u}],indexBuffer:p})}update(e){if(!this._texture)return;let t=e.context;if(this._va||this._buildVertexArray(t),this._sp||=Cesium.ShaderProgram.fromCache({context:t,vertexShaderSource:O,fragmentShaderSource:k,attributeLocations:A}),this._rs||=Cesium.RenderState.fromCache({depthTest:{enabled:!0},depthMask:!1,blending:Cesium.BlendingState.ALPHA_BLEND,cull:{enabled:!1}}),!this._command){let e=this,t=this.owner;this._command=new Cesium.DrawCommand({owner:this,primitiveType:Cesium.PrimitiveType.TRIANGLES,vertexArray:this._va,shaderProgram:this._sp,renderState:this._rs,pass:Cesium.Pass.TRANSLUCENT,modelMatrix:Cesium.Matrix4.clone(Cesium.Matrix4.IDENTITY),boundingVolume:this._boundingVolume,count:this._indexCount,uniformMap:{u_prog:()=>t.prog,u_pxSize:()=>t.pxSize,u_reverse:()=>t.reverse,u_opacity:()=>t.opacity,u_aspect:()=>t.aspect,u_useTake:()=>t.useTake,u_pileCenter:()=>t.pileFrame.center,u_eAxis:()=>t.pileFrame.east,u_nAxis:()=>t.pileFrame.north,u_uAxis:()=>t.pileFrame.up,u_pileShift:()=>t.pileShift,u_pileSpread:()=>t.pileSpread,u_pileRise:()=>t.pileRise,u_atlas:()=>e._texture}})}e.commandList.push(this._command)}isDestroyed(){return!1}destroy(){return this._va&&=this._va.destroy(),this._sp&&=this._sp.destroy(),this._texture&&=this._texture.destroy(),Cesium.destroyObject(this)}},P=class{constructor(e,t,n){this.prog=1,this.reverse=0,this.pxSize=4.5,this.opacity=1,this.aspect=1,this.useTake=0,this.pileFrame=n||{center:Cesium.Cartesian3.ZERO,east:Cesium.Cartesian3.UNIT_X,north:Cesium.Cartesian3.UNIT_Y,up:Cesium.Cartesian3.UNIT_Z},this.pileShift=new Cesium.Cartesian3(0,0,0),this.pileSpread=1,this.pileRise=1,this._batches=t.map(e=>new N(e,this)),this._loadTextures(e.context)}async _loadTextures(e){await Promise.all(this._batches.map(async(t,n)=>{if(t.group.length!==0)try{let r=await Cesium.Resource.fetchImage({url:m.sheetUrl(n)}),i=new Cesium.Texture({context:e,source:r,flipY:!1,sampler:new Cesium.Sampler({minificationFilter:Cesium.TextureMinificationFilter.LINEAR,magnificationFilter:Cesium.TextureMagnificationFilter.LINEAR,wrapS:Cesium.TextureWrap.CLAMP_TO_EDGE,wrapT:Cesium.TextureWrap.CLAMP_TO_EDGE})});t.setTexture(i)}catch(e){console.error(`[discs] atlas sheet ${n} failed to load:`,e)}}))}update(e){if(e.passes.render)for(let t of this._batches)t.update(e)}isDestroyed(){return!1}destroy(){for(let e of this._batches)e.destroy();return Cesium.destroyObject(this)}};function F(e,t,n){let r=new P(e.scene,t,n);return e.scene.primitives.add(r),r}function I(e){let t=e.pileFrame,n=document.createElement(`div`);n.id=`pile-tuner`,n.innerHTML=`
+    <div class="pt-title">Pile tuning</div>
+    <label>East <input type="range" id="pt-e" min="-120" max="120" step="1" value="0"><span id="pt-ev">0</span>m</label>
+    <label>North <input type="range" id="pt-n" min="-120" max="120" step="1" value="0"><span id="pt-nv">0</span>m</label>
+    <label>Up <input type="range" id="pt-u" min="-50" max="80" step="1" value="0"><span id="pt-uv">0</span>m</label>
+    <label>Spread <input type="range" id="pt-s" min="0.3" max="2" step="0.05" value="1"><span id="pt-sv">1.00</span>×</label>
+    <label>Height <input type="range" id="pt-r" min="0.3" max="2" step="0.05" value="1"><span id="pt-rv">1.00</span>×</label>
+    <div class="pt-out" id="pt-out"></div>
+  `,document.body.appendChild(n);let r=e=>n.querySelector(e),i=r(`#pt-e`),a=r(`#pt-n`),o=r(`#pt-u`),s=r(`#pt-s`),c=r(`#pt-r`),l=r(`#pt-ev`),u=r(`#pt-nv`),d=r(`#pt-uv`),f=r(`#pt-sv`),p=r(`#pt-rv`),m=r(`#pt-out`);function h(){let n=parseFloat(i.value),r=parseFloat(a.value),h=parseFloat(o.value);l.textContent=n,u.textContent=r,d.textContent=h,f.textContent=parseFloat(s.value).toFixed(2),p.textContent=parseFloat(c.value).toFixed(2);let g=new Cesium.Cartesian3(0,0,0);Cesium.Cartesian3.add(g,Cesium.Cartesian3.multiplyByScalar(t.east,n,new Cesium.Cartesian3),g),Cesium.Cartesian3.add(g,Cesium.Cartesian3.multiplyByScalar(t.north,r,new Cesium.Cartesian3),g),Cesium.Cartesian3.add(g,Cesium.Cartesian3.multiplyByScalar(t.up,h,new Cesium.Cartesian3),g),e.pileShift=g,e.pileSpread=parseFloat(s.value),e.pileRise=parseFloat(c.value),m.textContent=`offsetE += ${n}, offsetN += ${r}, base += ${h}\nradius ×${parseFloat(s.value).toFixed(2)}, top ×${parseFloat(c.value).toFixed(2)}`}for(let e of[i,a,o,s,c])e.addEventListener(`input`,h);h()}var L=16;function R(e){return-(Math.cos(Math.PI*e)-1)/2}var z=class{constructor(e,t,n){this.viewer=e,this.discs=t,this.yearRange=n||{min:1800,max:2e3},this.phase=`museum`,this._raf=0,this.globalHeight=145e5,this.onComplete=null,this.ticker=document.createElement(`div`),this.ticker.id=`year-ticker`,document.body.appendChild(this.ticker)}flyGlobal(e=3.5){let t=this.viewer.camera;t.cancelFlight(),t.flyTo({destination:Cesium.Cartesian3.fromDegrees(12,28,this.globalHeight),orientation:{heading:0,pitch:Cesium.Math.toRadians(-90),roll:0},duration:e,complete:()=>this._enableControls(),cancel:()=>this._enableControls()})}_enableControls(){this.viewer.scene.screenSpaceCameraController.enableInputs=!0}_fadeDiscs(e,t){cancelAnimationFrame(this._fadeRaf);let n=this.discs.opacity,r=performance.now(),i=()=>{let a=Math.min((performance.now()-r)/(t*1e3),1);this.discs.opacity=n+(e-n)*R(a),a<1&&(this._fadeRaf=requestAnimationFrame(i))};this._fadeRaf=requestAnimationFrame(i)}_run(e,t,n,r){cancelAnimationFrame(this._raf),this.discs.reverse=e,this.discs.useTake=t,this.discs.opacity=1,this.discs.prog=0;let i=performance.now(),a=()=>{let e=Math.min((performance.now()-i)/(L*1e3),1);this.discs.prog=R(e),r&&r(this.discs.prog),e<1?this._raf=requestAnimationFrame(a):n&&n()};this._raf=requestAnimationFrame(a)}returnHome(){this.phase=`returning`,this.flyGlobal(),this._run(0,0,()=>{this.phase=`home`,this.onComplete&&this.onComplete(`home`)})}watchTaken(){this.phase=`taking`,this.flyGlobal(),this.ticker.classList.add(`show`),this._run(1,1,()=>this._closeOnMuseum(),e=>{let{min:t,max:n}=this.yearRange;this.ticker.textContent=String(Math.round(t+(n-t)*e))})}_closeOnMuseum(){this.phase=`museum`,this.ticker.classList.remove(`show`),r(this.viewer,!0),this._fadeDiscs(0,3.5),this.onComplete&&this.onComplete(`museum`)}resetExperience(){cancelAnimationFrame(this._raf),cancelAnimationFrame(this._fadeRaf),this.ticker.classList.remove(`show`),this.discs.opacity=1,this.pileNow(),r(this.viewer,!0),this.onComplete&&this.onComplete(`reset`)}pileNow(){cancelAnimationFrame(this._raf),this.discs.reverse=0,this.discs.useTake=0,this.discs.prog=0,this.phase=`museum`}},B={"Republic of Benin":`Benin`,"Democratic Republic of the Congo":`DR Congo`,"Cyprus (Greek)":`Cyprus`,"Egypt (Coptic)":`Egypt`,"Myanmar (Pagan)":`Myanmar`,"United States":`United States`},V=m.atlasSize/m.tileSize,H=76,U=23e6;function W(e){return B[e]||e||`Unknown`}function G(e,t){let{atlas_index:n,u:r,v:i}=t.atlas,a=V*H;e.style.backgroundImage=`url(${m.sheetUrl(n)})`,e.style.backgroundSize=`${a}px ${a}px`,e.style.backgroundPosition=`-${r*a}px -${i*a}px`}function K(e,t,n,r){let i=e.scene,a=new Map;for(let e of t){let t=W(e.origin_country),n=a.get(t);n||(n={name:t,items:[],sumLng:0,sumLat:0},a.set(t,n)),n.items.push(e),n.sumLng+=e.lng,n.sumLat+=e.lat}let{panel:o,grid:s,panelTitle:c,panelCount:l}=q(),u=J();function d(e){c.textContent=e.name,l.textContent=`${e.items.length} object${e.items.length===1?``:`s`}`,s.innerHTML=``;for(let t of e.items){let e=document.createElement(`button`);e.className=`thumb`,e.title=t.name||t.bm_id,G(e,t),e.addEventListener(`click`,()=>f(t)),s.appendChild(e)}o.classList.add(`open`)}function f(e){Y(u,e),u.root.classList.add(`open`)}let p=document.createElement(`div`);p.id=`origin-labels`,document.body.appendChild(p);let m=[];for(let e of a.values()){let t=e.sumLng/e.items.length,n=e.sumLat/e.items.length,r=document.createElement(`div`);r.className=`country-label`,r.textContent=e.name,p.appendChild(r),m.push({el:r,group:e,position:Cesium.Cartesian3.fromDegrees(t,n),sx:0,sy:0,visible:!1})}let h=new Cesium.Cartesian2,g=new Cesium.Cartesian3,_=new Cesium.Cartesian3;i.postRender.addEventListener(()=>{let e=i.camera,t=e.positionCartographic.height>U,n=i.canvas.clientWidth,r=i.canvas.clientHeight,a=Cesium.Cartesian3.magnitude(e.positionWC);Cesium.Cartesian3.normalize(e.positionWC,g);for(let e of m){let o=!t;if(o){Cesium.Cartesian3.normalize(e.position,_);let t=Cesium.Cartesian3.magnitude(e.position)/a;Cesium.Cartesian3.dot(g,_)<t&&(o=!1)}let s=null;o&&(s=Cesium.SceneTransforms.worldToWindowCoordinates(i,e.position,h),(!s||!(s.x>=0&&s.x<=n&&s.y>=0&&s.y<=r))&&(o=!1)),o?(e.visible=!0,e.sx=s.x,e.sy=s.y,e.el.style.display=``,e.el.style.transform=`translate(-50%, -50%) translate(${s.x}px, ${s.y}px)`):(e.visible||e.el.style.display!==`none`)&&(e.visible=!1,e.el.style.display=`none`)}});function v(e,t){for(let n of m){if(!n.visible)continue;let r=n.el.offsetWidth/2,i=n.el.offsetHeight/2;if(e>=n.sx-r&&e<=n.sx+r&&t>=n.sy-i&&t<=n.sy+i)return n}return null}let y=new Cesium.Cartesian2,b=new Cesium.Cartesian3;function x(e){return r.prog>.99?r.reverse?e.museum:e.home:r.prog<.01?r.reverse?e.home:e.museum:null}function S(e,t,n){return Cesium.Cartesian3.normalize(e,b),Cesium.Cartesian3.dot(t,b)>=Cesium.Cartesian3.magnitude(e)/n}function C(e,t){if(r.prog>.01&&r.prog<.99)return null;let a=i.camera,o=Cesium.Cartesian3.normalize(a.positionWC,new Cesium.Cartesian3),s=Cesium.Cartesian3.magnitude(a.positionWC),c=r.pxSize*r.pxSize,l=(r.pxSize+6)*(r.pxSize+6),u=null,d=1/0,f=null,p=l;for(let r of n){let n=x(r);if(!n||!S(n,o,s))continue;let l=Cesium.SceneTransforms.worldToWindowCoordinates(i,n,y);if(!l)continue;let m=l.x-e,h=l.y-t,g=m*m+h*h;if(g<=c){let e=Cesium.Cartesian3.distance(a.positionWC,n);e<d&&(d=e,u=r)}else g<p&&(p=g,f=r)}return u||f}let w=e.screenSpaceEventHandler;w.setInputAction(e=>{let n=v(e.position.x,e.position.y);if(n){d(n.group);return}let r=C(e.position.x,e.position.y);r&&f(t[r.index])},Cesium.ScreenSpaceEventType.LEFT_CLICK);let T=null;w.setInputAction(e=>{let t=v(e.endPosition.x,e.endPosition.y);t!==T&&(T&&T.el.classList.remove(`hover`),t&&t.el.classList.add(`hover`),T=t,i.canvas.style.cursor=t?`pointer`:``)},Cesium.ScreenSpaceEventType.MOUSE_MOVE);function E(){o.classList.remove(`open`),u.root.classList.remove(`open`)}return{groups:a,openCountry:d,closeUI:E}}function q(){let e=document.createElement(`div`);return e.id=`country-panel`,e.innerHTML=`
+    <div class="cp-head">
+      <div>
+        <div class="cp-title"></div>
+        <div class="cp-count"></div>
+      </div>
+      <button class="cp-close" aria-label="Close">×</button>
+    </div>
+    <div class="cp-hint">Select an image to open its full museum card.</div>
+    <div class="cp-grid"></div>
+  `,document.body.appendChild(e),e.querySelector(`.cp-close`).addEventListener(`click`,()=>e.classList.remove(`open`)),{panel:e,grid:e.querySelector(`.cp-grid`),panelTitle:e.querySelector(`.cp-title`),panelCount:e.querySelector(`.cp-count`)}}function J(){let e=document.createElement(`div`);return e.id=`detail-card`,e.innerHTML=`
+    <button class="dc-close" aria-label="Close">×</button>
+    <div class="dc-img"><img alt=""></div>
+    <div class="dc-body">
+      <h2 class="dc-name"></h2>
+      <div class="dc-origin"></div>
+      <dl class="dc-meta"></dl>
+      <p class="dc-desc"></p>
+      <a class="dc-link" target="_blank" rel="noopener">View at the British Museum ↗</a>
+    </div>
+  `,document.body.appendChild(e),e.querySelector(`.dc-close`).addEventListener(`click`,()=>e.classList.remove(`open`)),{root:e,img:e.querySelector(`.dc-img img`),name:e.querySelector(`.dc-name`),origin:e.querySelector(`.dc-origin`),meta:e.querySelector(`.dc-meta`),desc:e.querySelector(`.dc-desc`),link:e.querySelector(`.dc-link`)}}function Y(e,t){e.name.textContent=t.name||t.bm_id,e.origin.textContent=t.origin||t.origin_country||``,e.img.onerror=()=>{let{atlas_index:n,u:r,v:i}=t.atlas,a=V*100;e.img.onerror=null,e.img.removeAttribute(`src`),e.img.parentElement.style.backgroundImage=`url(${m.sheetUrl(n)})`,e.img.parentElement.style.backgroundSize=`${a}% ${a}%`,e.img.parentElement.style.backgroundPosition=`${r/(1-1/V)*100}% ${i/(1-1/V)*100}%`},e.img.parentElement.style.backgroundImage=``,e.img.src=t.image_url||``;let n=[[`Date`,t.date_text||(t.year==null?``:String(t.year))],[`Material`,t.material],[`Museum no.`,t.museum_number]].filter(([,e])=>e);e.meta.innerHTML=n.map(([e,t])=>`<dt>${e}</dt><dd>${X(t)}</dd>`).join(``),e.desc.textContent=t.description||``;let r=t.image_source_url||t.image_url;r?(e.link.href=r,e.link.style.display=``):e.link.style.display=`none`}function X(e){return String(e).replace(/[&<>"]/g,e=>({"&":`&amp;`,"<":`&lt;`,">":`&gt;`,'"':`&quot;`})[e])}function Z(e){let t=e.scene,n=t.camera,r=document.createElement(`div`);r.id=`cam-controls`,r.innerHTML=`
+    <button data-act="in"    title="Zoom in"     aria-label="Zoom in">+</button>
+    <button data-act="out"   title="Zoom out"    aria-label="Zoom out">&minus;</button>
+    <button data-act="left"  title="Rotate left"  aria-label="Rotate left">&#8634;</button>
+    <button data-act="right" title="Rotate right" aria-label="Rotate right">&#8635;</button>
+    <button data-act="up"    title="Tilt up"      aria-label="Tilt up">&#8963;</button>
+    <button data-act="down"  title="Tilt down"    aria-label="Tilt down">&#8964;</button>
+    <button data-act="north" class="wide" title="Reset to north-up" aria-label="Reset to north-up">N&#8593;</button>
+  `,document.body.appendChild(r);function i(){let e=t.canvas.clientWidth,r=t.canvas.clientHeight;return n.pickEllipsoid(new Cesium.Cartesian2(e/2,r/2),t.globe.ellipsoid)}function a(e,t){let r=i();if(!r){t||n.rotate(Cesium.Cartesian3.UNIT_Z,e);return}let a=Cesium.Transforms.eastNorthUpToFixedFrame(r);n.lookAtTransform(a),t?n.rotateUp(e):n.rotateRight(e),n.lookAtTransform(Cesium.Matrix4.IDENTITY)}function o(){n.cancelFlight(),n.flyTo({destination:n.positionWC.clone(),orientation:{heading:0,pitch:n.pitch,roll:0},duration:.6})}r.addEventListener(`click`,e=>{let t=e.target.closest(`button`);if(!t)return;let r=t.dataset.act,i=Math.max(n.positionCartographic.height*.4,50),s=Cesium.Math.toRadians(22);r===`in`?n.zoomIn(i):r===`out`?n.zoomOut(i):r===`left`?a(-s,!1):r===`right`?a(s,!1):r===`up`?a(Cesium.Math.toRadians(12),!0):r===`down`?a(Cesium.Math.toRadians(-12),!0):r===`north`&&o()})}async function Q(e){let t=e.scene,n=null;try{return n=await Cesium.Cesium3DTileset.fromIonAssetId(2275207),t.primitives.add(n),t.globe.show=!1,n}catch(e){return console.warn(`[return-them-home] Google 3D Tiles unavailable — keeping the imagery globe. Add VITE_GOOGLE_MAPS_API_KEY, or enable asset 2275207 in your Cesium ion account.`,e),null}}function $(e){let t=document.getElementById(`fatal`);t||(t=document.createElement(`div`),t.id=`fatal`,t.style.cssText=`position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;max-width:560px;background:rgba(40,10,10,0.92);border:1px solid #a33;border-radius:10px;padding:20px 24px;font:14px/1.5 monospace;color:#ffd;white-space:pre-wrap;`,document.body.appendChild(t)),t.textContent=e}function ee(e){e.imageryLayers.addImageryProvider(new Cesium.OpenStreetMapImageryProvider({url:`https://tile.openstreetmap.org/`}))}async function te(){let t=new Cesium.Viewer(`cesiumContainer`,{baseLayer:!1,fullscreenButton:!1,homeButton:!1,sceneModePicker:!1,baseLayerPicker:!1,geocoder:!1,navigationHelpButton:!1,animation:!1,timeline:!1,infoBox:!1,selectionIndicator:!1,navigationInstructionsInitiallyVisible:!1,scene3DOnly:!0});window.viewer=t,t.scene.renderError.addEventListener((e,t)=>{$(`Render error:
+`+(t&&t.message?t.message:t))}),console.warn(`[return-them-home] No VITE_CESIUM_ION_TOKEN — using OpenStreetMap imagery.`),ee(t);let n=t.scene;n.msaaSamples=4,n.globe.enableLighting=!0;let i=n.screenSpaceCameraController;i.minimumZoomDistance=30,i.maximumZoomDistance=4e7,i.enableCollisionDetection=!0,n.skyAtmosphere.show=!0,n.sun.show=!0,n.moon.show=!0,n.fog.enabled=!0,t.cesiumWidget.creditContainer.style.display=`none`,await Q(t);let o=60;if(t.scene.sampleHeightSupported)try{let n=Cesium.Cartographic.fromDegrees(e.lon,e.lat),[r]=await t.scene.sampleHeightMostDetailed([n]);r&&isFinite(r.height)&&(o=r.height-3)}catch(e){console.warn(`[return-them-home] surface height sample failed:`,e)}r(t,!1);try{await p(t)}catch(e){console.warn(`[return-them-home] borders failed:`,e)}let s=await w(),{groups:c,yearRange:l}=E(s,o),u=F(t,c,D(o)),d=new z(t,u,l);d.pileNow();let f=K(t,s,c.flat(),u),m=e=>()=>{f.closeUI(),e()},h=document.getElementById(`btn-return`);function g(e,t){h.textContent=e,h.onclick=m(t)}g(`Return them home`,()=>d.returnHome()),d.onComplete=e=>{e===`museum`?g(`Reset`,()=>d.resetExperience()):g(`Return them home`,()=>d.returnHome())},document.getElementById(`btn-taken`).addEventListener(`click`,m(()=>d.watchTaken())),Z(t),new URLSearchParams(location.search).has(`dev`)&&I(u),window.discs=u,window.story=d,window.logCam=()=>a(t)}te().catch(e=>{console.error(`[return-them-home] init failed:`,e),$(`Startup failed:
+`+(e&&e.stack?e.stack:e))});
