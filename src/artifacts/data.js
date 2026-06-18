@@ -31,9 +31,12 @@ const HOME_SCATTER_M = 32000;
 // absolute ellipsoid heights, whereas the model is clamped to ground ~+20m in
 // Bloomsbury — without the lift the pile sinks into the building).
 const PILE_BASE_H = 14; // metres above the ellipsoid (approx London ground)
-const PILE_RADIUS = 44; // metres
-const PILE_TOP = 82;
-const PILE_FLOOR = 4;
+const PILE_RADIUS = 30; // metres
+const PILE_TOP = 46;
+const PILE_FLOOR = 3;
+// Shift the heap off the dome centre toward the entrance/forecourt (south).
+const PILE_OFFSET_E = 0; // metres east
+const PILE_OFFSET_N = -42; // metres north (negative = south, toward entrance)
 
 // Deterministic PRNG (mulberry32) so the pile/jitter are stable across runs.
 function mulberry(seed) {
@@ -110,8 +113,8 @@ export function buildPositions(artifacts, pileBaseHeight = PILE_BASE_H) {
         Math.exp(-(rad * rad) / (PILE_RADIUS * PILE_RADIUS * 0.5)) *
         (0.6 + 0.4 * rnd());
     const local = new Cesium.Cartesian3(
-      Math.cos(theta) * rad,
-      Math.sin(theta) * rad,
+      Math.cos(theta) * rad + PILE_OFFSET_E,
+      Math.sin(theta) * rad + PILE_OFFSET_N,
       height
     );
     const museum = Cesium.Matrix4.multiplyByPoint(
