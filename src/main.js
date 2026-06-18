@@ -11,17 +11,6 @@ import { initExplore } from './explore.js';
 import { mountCameraControls } from './controls.js';
 import { addGoogleTiles } from './tiles.js';
 
-// Visible build stamp so it's obvious which version is actually running
-// (defeats stale dev-server / service-worker confusion).
-const BUILD = 'v19 — baked opening view';
-console.log(`%c[Return Them Home] build ${BUILD}`, 'color:#e8b24a;font-weight:bold');
-window.addEventListener('DOMContentLoaded', () => {
-  const stamp = document.createElement('div');
-  stamp.id = 'build-stamp';
-  stamp.textContent = BUILD;
-  document.body.appendChild(stamp);
-});
-
 // Cesium Ion powers world-scale satellite imagery and terrain. The token is
 // read from the environment (VITE_CESIUM_ION_TOKEN) — never hard-coded, never
 // committed. Without a token we fall back to token-free imagery.
@@ -171,9 +160,21 @@ async function init() {
     explore.closeUI();
     fn();
   };
-  document
-    .getElementById('btn-return')
-    .addEventListener('click', run(() => story.returnHome()));
+
+  // The gold button is "Return them home" until the artefacts have been
+  // gathered back into the museum — then there's nothing to send home, so it
+  // becomes "Reset" and restarts the experience from the opening.
+  const gold = document.getElementById('btn-return');
+  function setGold(label, fn) {
+    gold.textContent = label;
+    gold.onclick = run(fn);
+  }
+  setGold('Return them home', () => story.returnHome());
+  story.onComplete = (phase) => {
+    if (phase === 'museum') setGold('Reset', () => story.resetExperience());
+    else setGold('Return them home', () => story.returnHome());
+  };
+
   document
     .getElementById('btn-taken')
     .addEventListener('click', run(() => story.watchTaken()));

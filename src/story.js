@@ -20,6 +20,7 @@ export class Story {
     this.phase = 'museum'; // museum | returning | home | taking | gathering
     this._raf = 0;
     this.globalHeight = 1.45e7;
+    this.onComplete = null; // (phase) => void, fired when a pass settles
 
     // Year ticker overlay (shown during "watch how they were taken").
     this.ticker = document.createElement('div');
@@ -89,6 +90,7 @@ export class Story {
     this.flyGlobal();
     this._run(0.0, 0.0, () => {
       this.phase = 'home';
+      if (this.onComplete) this.onComplete('home');
     });
   }
 
@@ -126,6 +128,19 @@ export class Story {
     this.ticker.classList.remove('show');
     flyToMuseum(this.viewer, /* animate */ true);
     this._fadeDiscs(0.0, 3.5);
+    if (this.onComplete) this.onComplete('museum');
+  }
+
+  // Restart the experience: re-pile the artefacts on the museum, fade them
+  // back in, and return to the opening view.
+  resetExperience() {
+    cancelAnimationFrame(this._raf);
+    cancelAnimationFrame(this._fadeRaf);
+    this.ticker.classList.remove('show');
+    this.discs.opacity = 1.0;
+    this.pileNow();
+    flyToMuseum(this.viewer, /* animate */ true);
+    if (this.onComplete) this.onComplete('reset');
   }
 
   // Snap to the piled state at the museum without animating (opening shot).

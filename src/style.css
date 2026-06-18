@@ -241,19 +241,6 @@ html, body {
 }
 #year-ticker.show { opacity: 1; }
 
-/* Build stamp (bottom-right) */
-#build-stamp {
-  position: fixed;
-  right: 8px;
-  bottom: 6px;
-  z-index: 50;
-  font: 10px/1 monospace;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(0, 0, 0, 0.4);
-  padding: 3px 6px;
-  border-radius: 4px;
-  pointer-events: none;
-}
 
 /* Persistent camera controls (zoom + rotate) */
 #cam-controls {
