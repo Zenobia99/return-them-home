@@ -6,7 +6,7 @@
   "description": "A cinematic CesiumJS experience: the real British Museum at Bloomsbury, then 5,000 object photographs streaming home along arcs to 88 nations.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node tools/postbuild.mjs",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist -b gh-pages -r https://github.com/Zenobia99/return-them-home.git"
