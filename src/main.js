@@ -142,12 +142,12 @@ async function init() {
 
   // Phase 2: load the 5,000 artefacts and render them as photo-discs.
   const artifacts = await loadArtifacts();
-  const { groups, yearRange } = buildPositions(artifacts, pileBase);
+  const { groups, yearRange, takeYears, total } = buildPositions(artifacts, pileBase);
   const discs = addPhotoDiscs(viewer, groups, pileFrame(pileBase));
 
   // Phase 3: the narrative. Open piled on the museum; stream home / watch how
   // they were taken / gather on the buttons.
-  const story = new Story(viewer, discs, yearRange);
+  const story = new Story(viewer, discs, yearRange, takeYears, total);
   story.pileNow();
 
   // Phase 4: clickable country labels + disc clicks -> thumbnail panel /

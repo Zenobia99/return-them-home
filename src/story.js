@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { flyToMuseum } from './museum.js';
+import { STAGGER } from './artifacts/shaders.js';
 
 // Length of a full run (pile -> home, or home -> pile), in seconds.
 const RUN_SECS = 16;
@@ -13,10 +14,12 @@ function easeInOutSine(x) {
 //   watchTaken()  — reverse, ordered by acquisition year, with a year ticker
 //   resetExperience() — re-pile and return to the opening view
 export class Story {
-  constructor(viewer, discs, yearRange) {
+  constructor(viewer, discs, yearRange, takeYears, total) {
     this.viewer = viewer;
     this.discs = discs;
     this.yearRange = yearRange || { min: 1800, max: 2000 };
+    this.takeYears = takeYears || []; // dated acquisition years, take order
+    this.total = total || 0;
     this.phase = 'museum'; // museum | returning | home | taking | gathering
     this._raf = 0;
     this.globalHeight = 1.45e7;
@@ -106,8 +109,16 @@ export class Story {
       1.0,
       () => this._closeOnMuseum(),
       (prog) => {
-        const { min, max } = this.yearRange;
-        this.ticker.textContent = String(Math.round(min + (max - min) * prog));
+        // Real years, tied to the wave: invert the shader's stagger formula to
+        // count how many discs have arrived, then read the year of the latest
+        // dated arrival. Undated objects fly at the end and hold the last real
+        // year instead of fabricating one.
+        const N = this.total;
+        const dated = this.takeYears.length;
+        if (!N || !dated) return;
+        const arrived = Math.floor(((prog * (1 + STAGGER) - 1) / STAGGER) * (N - 1)) + 1;
+        const k = Math.min(Math.max(arrived, 1), dated);
+        this.ticker.textContent = String(this.takeYears[k - 1]);
       }
     );
   }
