@@ -14,6 +14,10 @@
 //
 //   t = clamp(u_prog*(1+S) - aOrd*S, 0, 1)   is this disc's own 0->1 flight.
 
+// Stagger spread, shared with the JS side (story.js derives the year-ticker
+// arrival count from the same formula the shader uses).
+export const STAGGER = 6.0;
+
 export const DISC_VERTEX = /* glsl */ `
 in vec3 aHome;     // ECEF position at the origin country
 in vec3 aMuseum;   // ECEF position in the Bloomsbury pile
@@ -43,7 +47,7 @@ out vec2 v_local;
 out float v_flight;   // 1 while airborne, for the fragment warm-up
 
 const float PI = 3.14159265;
-const float S = 6.0;            // stagger spread
+const float S = ${STAGGER.toFixed(1)};  // stagger spread (see export above)
 const float LIFT_BASE = 1.8e5;  // metres of arc apex for a short hop
 const float LIFT_SPAN = 1.9e6;  // extra apex metres for a half-globe arc
 

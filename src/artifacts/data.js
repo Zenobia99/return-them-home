@@ -158,14 +158,16 @@ export function buildPositions(artifacts, pileBaseHeight = PILE_BASE_H) {
     p.disc.ordTake = rank / last;
   });
 
-  // Year range across artefacts that actually carry a parseable year.
-  const years = flat.filter((p) => p.hasYear).map((p) => p.year);
+  // Dated acquisition years in take order (flat is already sorted by year,
+  // undated ones at the end). The story's ticker walks this array so it shows
+  // the real year of the wave — never a fabricated one for undated objects.
+  const takeYears = flat.filter((p) => p.hasYear).map((p) => p.year);
   const yearRange = {
-    min: years.length ? Math.min(...years) : 1800,
-    max: years.length ? Math.max(...years) : 2000,
+    min: takeYears.length ? takeYears[0] : 1800,
+    max: takeYears.length ? takeYears[takeYears.length - 1] : 2000,
   };
 
-  return { groups, yearRange };
+  return { groups, yearRange, takeYears, total: flat.length };
 }
 
 export { MUSEUM };

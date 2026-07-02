@@ -310,7 +310,8 @@ function fillCard(card, a) {
     card.img.parentElement.style.backgroundPosition = `${(u / (1 - 1 / TILES_PER_ROW)) * 100}% ${(v / (1 - 1 / TILES_PER_ROW)) * 100}%`;
   };
   card.img.parentElement.style.backgroundImage = '';
-  card.img.src = a.image_url || '';
+  if (a.image_url) card.img.src = a.image_url;
+  else card.img.onerror(); // no photo: skip straight to the atlas fallback
 
   const rows = [
     ['Date', a.date_text || (a.year != null ? String(a.year) : '')],
@@ -323,8 +324,10 @@ function fillCard(card, a) {
 
   card.desc.textContent = a.description || '';
 
+  // https-only: a poisoned data record must not smuggle a javascript: URL
+  // into the "View at the British Museum" link.
   const url = a.image_source_url || a.image_url;
-  if (url) {
+  if (url && /^https:\/\//i.test(url)) {
     card.link.href = url;
     card.link.style.display = '';
   } else {

@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [cesium()],
   server: {
     port: 5180,
-    host: '0.0.0.0',
+    // Loopback only — pass `vite --host` when phone-testing on the LAN.
   },
   build: {
     // The high-quality British Museum model is ~15MB; don't warn about it.
