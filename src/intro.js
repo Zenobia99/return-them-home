@@ -48,7 +48,7 @@ export function runIntro() {
   // Pin the button to the dome in splash.jpg. center/cover maps image point
   // (ix, iy) in the 1280x720 still to viewport centre + offset * cover scale.
   function placeDomeBtn() {
-    const iw = 1280, ih = 720, ix = 653, iy = 132;
+    const iw = 1280, ih = 720, ix = 620, iy = 132;
     const s = Math.max(innerWidth / iw, innerHeight / ih);
     domeBtn.style.left = innerWidth / 2 + (ix - iw / 2) * s + 'px';
     domeBtn.style.top = innerHeight / 2 + (iy - ih / 2) * s + 'px';
