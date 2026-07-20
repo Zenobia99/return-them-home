@@ -17,8 +17,8 @@
   <title>Return Them Home</title>
   <meta name="description"
     content="A cinematic experience: the real British Museum at Bloomsbury, then 5,000 object photographs streaming home along arcs to 88 nations." />
-  <script type="module" crossorigin src="/return-them-home/assets/index-C4Zqx0o7.js"></script>
-  <link rel="stylesheet" crossorigin href="/return-them-home/assets/index-iLs0AOgJ.css">
+  <script type="module" crossorigin src="/return-them-home/assets/index-DL1DRlKr.js"></script>
+  <link rel="stylesheet" crossorigin href="/return-them-home/assets/index-BKus-M2R.css">
 </head>
 <body>
   <div id="cesiumContainer"></div>
@@ -31,6 +31,18 @@
       <button id="btn-taken">Timeline Back</button>
     </div>
   </div>
+
+  <!-- Detonation intro (fresh page loads only): splash still + dome button,
+       then the 5s explosion video, then the 3D experience underneath. -->
+  <div id="splash">
+    <div class="scrim"></div>
+    <button id="domeBtn" class="dome-btn">
+      <span class="ring">&#127963;</span>
+      <span class="lbl">Press Button To Release</span>
+    </button>
+  </div>
+  <video id="intro-video" class="hidden" playsinline preload="auto"></video>
+  <button id="skip" class="hidden">Skip</button>
 
 </body>
 </html>
