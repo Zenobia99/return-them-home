@@ -27,6 +27,18 @@
     </div>
   </div>
 
+  <!-- Detonation intro (fresh page loads only): splash still + dome button,
+       then the 5s explosion video, then the 3D experience underneath. -->
+  <div id="splash">
+    <div class="scrim"></div>
+    <button id="domeBtn" class="dome-btn">
+      <span class="ring">&#127963;</span>
+      <span class="lbl">Press Button To Release</span>
+    </button>
+  </div>
+  <video id="intro-video" class="hidden" playsinline preload="auto"></video>
+  <button id="skip" class="hidden">Skip</button>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

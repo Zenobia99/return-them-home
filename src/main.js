@@ -10,6 +10,7 @@ import { Story } from './story.js';
 import { initExplore } from './explore.js';
 import { mountCameraControls } from './controls.js';
 import { addGoogleTiles } from './tiles.js';
+import { runIntro } from './intro.js';
 
 // Cesium Ion powers world-scale satellite imagery and terrain. The token is
 // read from the environment (VITE_CESIUM_ION_TOKEN) — never hard-coded, never
@@ -192,6 +193,9 @@ async function init() {
   // Console helper for capturing a camera pose live.
   window.logCam = () => logCam(viewer);
 }
+
+// Splash is interactive immediately; Cesium keeps loading underneath it.
+runIntro();
 
 init().catch((err) => {
   console.error('[return-them-home] init failed:', err);
